@@ -14,7 +14,7 @@ makeMatchedForBoot <- function(nSwitchers = 300L,
     seed               = seed
   )
   pnuData <- simulatePnuData(simArgs)
-  spArgs  <- createStudyPopulationArgs(outcomeId = 1L, requireTimeAtRisk = FALSE)
+  spArgs <- createStudyPopulationArgs(outcomeId = 1L, requireTimeAtRisk = FALSE)
   pnuData <- createStudyPopulation(pnuData, spArgs)
 
   pop <- dplyr::collect(pnuData$studyPopulation)
@@ -79,7 +79,7 @@ test_that("bootstrapCi logRr matches fitOutcomeModel on the same population", {
   skip_if_not_installed("Cyclops")
   matched <- makeMatchedForBoot()
   original <- fitOutcomeModel(matched, NULL, createOutcomeModelArgs())
-  boot     <- suppressMessages(
+  boot <- suppressMessages(
     bootstrapCi(matched, NULL, createOutcomeModelArgs(), fastBootstrapArgs())
   )
   expect_equal(boot$logRr, original$logRr)
@@ -88,7 +88,7 @@ test_that("bootstrapCi logRr matches fitOutcomeModel on the same population", {
 test_that("bootstrapCi seLogRr is positive", {
   skip_if_not_installed("Cyclops")
   matched <- makeMatchedForBoot()
-  result  <- suppressMessages(
+  result <- suppressMessages(
     bootstrapCi(matched, NULL, createOutcomeModelArgs(), fastBootstrapArgs())
   )
   expect_gt(result$seLogRr, 0)
@@ -97,7 +97,7 @@ test_that("bootstrapCi seLogRr is positive", {
 test_that("bootstrapCi CI brackets the point estimate: ci95Lb < exp(logRr) < ci95Ub", {
   skip_if_not_installed("Cyclops")
   matched <- makeMatchedForBoot()
-  result  <- suppressMessages(
+  result <- suppressMessages(
     bootstrapCi(matched, NULL, createOutcomeModelArgs(), fastBootstrapArgs())
   )
   expect_lt(result$ci95Lb, exp(result$logRr))
@@ -107,8 +107,9 @@ test_that("bootstrapCi CI brackets the point estimate: ci95Lb < exp(logRr) < ci9
 test_that("bootstrapCi numberOfBootstraps equals numberOfReplications when no failures", {
   skip_if_not_installed("Cyclops")
   matched <- makeMatchedForBoot(nSwitchers = 200L, seed = 2L)
-  result  <- suppressMessages(
-    bootstrapCi(matched, NULL, createOutcomeModelArgs(),
+  result <- suppressMessages(
+    bootstrapCi(
+      matched, NULL, createOutcomeModelArgs(),
       createBootstrapArgs(numberOfReplications = 30L, seed = 1L)
     )
   )
@@ -128,8 +129,8 @@ test_that("bootstrapCi is reproducible with the same seed", {
     bootstrapCi(matched, NULL, createOutcomeModelArgs(), fastBootstrapArgs(seed = 7L))
   )
   expect_equal(r1$seLogRr, r2$seLogRr)
-  expect_equal(r1$ci95Lb,  r2$ci95Lb)
-  expect_equal(r1$ci95Ub,  r2$ci95Ub)
+  expect_equal(r1$ci95Lb, r2$ci95Lb)
+  expect_equal(r1$ci95Ub, r2$ci95Ub)
 })
 
 test_that("bootstrapCi with different seeds gives different results", {

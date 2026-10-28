@@ -182,8 +182,10 @@ createBootstrapArgs <- function(numberOfReplications = 1000L,
 #'
 #' @examples
 #' \dontrun{
-#' simArgs <- createSimulationArgs(nSwitchers = 500L, nCovariates = 0L,
-#'                                  logRr = log(2), seed = 1L)
+#' simArgs <- createSimulationArgs(
+#'   nSwitchers = 500L, nCovariates = 0L,
+#'   logRr = log(2), seed = 1L
+#' )
 #' pnuData <- simulatePnuData(simArgs)
 #' pnuData <- createStudyPopulation(pnuData, createStudyPopulationArgs(outcomeId = 1L))
 #' pop <- dplyr::collect(pnuData$studyPopulation)

@@ -284,7 +284,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 10: Bootstrap
 
-### Step 10.1 — bootstrapCi() [ ]
+### Step 10.1 — bootstrapCi() [x]
 
 **Goal:** Case-resampling bootstrap CIs for the Cox HR, sampling within strata.
 
@@ -304,7 +304,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 11: Run analyses
 
-### Step 11.1 — runPnuAnalyses() [ ]
+### Step 11.1 — runPnuAnalyses() [x]
 
 **Goal:** Top-level orchestration: one call runs all analyses for a list of analysis specifications.
 
@@ -419,3 +419,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 8.1 | "Before" population sourced from pnuData$studyPopulation | Matches CohortMethod's pattern of using cohortMethodData$cohorts; studyPopulation is unchanged by matchOnTcps | matchOnTcps returns a filtered data frame; does not modify pnuData |
 | 9.1 | fitOutcomeModel closely mirrors CohortMethod | Cyclops Cox call, informative-strata filter, CI extraction from confint() are identical pattern | PNU outcome model is the same statistical model — no fundamental difference |
 | 9.1 | useCovariates = TRUE implemented | Adds covariates from pnuData with a unique treatmentVarId above max(covariate_id); treatment coeff excluded from prior | Required merging treatment as an extra covariate alongside pnuData$covariates |
+| 10.1 | Cyclops::runBootstrap() crashes (segfault) | Implemented strata case-resampling in R: sample stratumIds with replacement, renumber, refit outcome model | Cyclops v4/v5 runBootstrap has a known segfault on arm64 macOS; R implementation is equivalent |
+| 10.1 | Duplicate row_id in resampled population | Reassign row_id = seq_len(nrow) after rbind; Cyclops rejects repeated rowId-covariateId pairs | Strata sampled more than once produce identical row_ids from the original population |
+| 11.1 | PnuAnalysis toJson only serializes primitive fields | Nested settings objects (TcpsArgs, MatchingArgs, etc.) contain Cyclops environments; only analysisId + description round-trip through JSON | Nested reconstruction would require a class-dispatch registry; deferred |
+| 11.1 | parallelComputing accepted but not implemented | Parameter reserved for future use; analyses always run sequentially | Parallel DB connections + Andromeda in multiple processes requires careful design; out of scope for Step 11.1 |
