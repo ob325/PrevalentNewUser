@@ -166,7 +166,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 5: Study population
 
-### Step 5.1 — createStudyPopulation() [ ]
+### Step 5.1 — createStudyPopulation() [x]
 
 **Goal:** Filter and index the `PnuData` for a specific outcome and apply user-specified inclusion criteria.
 
@@ -193,7 +193,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 6: Time-conditional propensity score
 
-### Step 6.1 — fitTcps() [ ]
+### Step 6.1 — fitTcps() [x]
 
 **Goal:** Fit a conditional logistic regression (CLR) stratified by exposure set to estimate P(switch | covariates).
 
@@ -212,7 +212,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 6.2 [DECISION POINT] — TCPS trimming strategy [ ]
+### Step 6.2 [DECISION POINT] — TCPS trimming strategy [x]
 
 **Options:**
 1. Symmetric preference-score trimming (mirror of CohortMethod's PS trimming)
@@ -227,7 +227,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 7: Matching
 
-### Step 7.1 — matchOnTcps() [ ]
+### Step 7.1 — matchOnTcps() [x]
 
 **Goal:** Greedy nearest-neighbour matching of switchers to comparators within each exposure set.
 
@@ -404,5 +404,14 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 3.1 | Cyclops / ResultModelManager moved to Suggests | Not used until Phase 6+/10+; R CMD check warned about unused Imports | cli and pillar added to Imports (used in PnuData::show via ::) |
 | 4.1 | outcomeBaseRate and followUpDays added to plan args | Both needed for the exponential survival model; plan listed only logRr without specifying the rate scale | outcomeBaseRate = P(event | comparator, followUpDays) is the most interpretable parameterisation |
 | 4.1 | toJson() precision fixed (digits = 15) | jsonlite default (4 decimal places) silently corrupted logRr on round-trip | All float fields in SimulationArgs must survive JSON serialization; fix applied to AbstractSerializableSettings |
+| 5.1 | studyPopulation stored as Andromeda table in PnuData | Plan says "PnuData with populated studyPopulation table"; CohortMethod returns a data frame instead | Andromeda storage keeps the pipeline consistent and allows large-data lazy joins in future steps |
+| 5.1 | washoutPeriod skipped when observation_period_start_date absent | PnuData cohorts table from simulatePnuData has no observation period column | When getDbPnuData (Step 3.1) adds that column in a future revision, washout will activate automatically |
+| 5.1 | censorAtNewRiskWindow = TRUE issues warning and is not yet implemented | Censoring on new risk windows requires access to other cohort entries per person; deferred | Will be implemented in a later step when the use case is clearer in the PNU context |
 | 3.1 | cohortId = -1 in getDbCovariateData | Skips cohort_definition_id WHERE clause; no extra column needed in #pnu_cohorts | Verified via FeatureExtraction SQL template pattern |
 | 3.1 | Andromeda preserves R attributes | metaData attr survives saveAndromeda/loadAndromeda; no extra table needed | Verified with small live test |
+| 6.1 | predict() returns linear predictor, not probability | Cyclops CLR predict() returns β'x; sigmoid transformation applied: ps = 1/(1+exp(-lp)) | Confirmed via live testing; values > 1 before transformation |
+| 6.1 | cyclopsPrior/cyclopsControl not JSON-serializable | TcpsArgs overrides toJson() to omit those fields; defaults reconstructed inside fitTcps() | jsonlite cannot serialise R environments (used internally by Cyclops objects) |
+| 6.1 | convertToCyclopsData requires stratumId in covariates | stratumId must appear in BOTH outcomes and covariates data frames; data sorted by stratumId | Discovered via "Index out of bounds: [index='stratumId']" error during testing |
+| 6.2 | TCPS trimming deferred | Option 3 chosen: no trimming in Phase 6; a trimByPs() utility will be added in Phase 8 alongside balance diagnostics | Trimming is most useful interactively after inspecting PS distributions; API should be designed with balance plots in mind |
+| 7.1 | matchPsInternal is compiled C++ in CohortMethod | Implemented pure-R greedy NN matching using findInterval() for O(n log n) range queries on sorted controls | No runtime dependency on CohortMethod; R implementation correct and fast enough for typical study populations |
+| 7.1 | allowReverseMatch default = FALSE | Matches CohortMethod default; in PNU there are typically more comparators than switchers so reversal is rarely needed | Confirmed from CohortMethod::createMatchOnPsArgs formals |

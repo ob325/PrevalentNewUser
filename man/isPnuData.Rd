@@ -19,7 +19,7 @@ Test whether an object is a PnuData instance
 \dontrun{
 pnuData <- getDbPnuData(...)
 isPnuData(pnuData) # TRUE
-isPnuData(list())  # FALSE
+isPnuData(list()) # FALSE
 }
 
 }

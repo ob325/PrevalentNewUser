@@ -107,6 +107,18 @@ createEmptyPnuData <- function(metaData = list()) {
       end_day = integer(0),
       is_binary = character(0),
       missing_means_zero = character(0)
+    ),
+    studyPopulation = dplyr::tibble(
+      row_id = integer(0),
+      person_seq_id = integer(0),
+      person_id = character(0),
+      cohort_start_date = as.Date(character(0)),
+      cohort_end_date = as.Date(character(0)),
+      treatment = integer(0),
+      exposure_set_id = integer(0),
+      survival_time = integer(0),
+      outcome_count = integer(0),
+      days_to_event = integer(0)
     )
   )
   attr(pnuData, "metaData") <- metaData
@@ -126,7 +138,7 @@ createEmptyPnuData <- function(metaData = list()) {
 #' \dontrun{
 #' pnuData <- getDbPnuData(...)
 #' isPnuData(pnuData) # TRUE
-#' isPnuData(list())  # FALSE
+#' isPnuData(list()) # FALSE
 #' }
 #'
 #' @export
@@ -155,7 +167,9 @@ setMethod("show", "PnuData", function(object) {
   }
 
   if (!is.null(object$cohorts)) {
-    nTotal <- object$cohorts |> dplyr::count() |> dplyr::pull()
+    nTotal <- object$cohorts |>
+      dplyr::count() |>
+      dplyr::pull()
     nTarget <- object$cohorts |>
       dplyr::filter(.data$treatment == 1L) |>
       dplyr::count() |>
