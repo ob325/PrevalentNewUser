@@ -34,53 +34,25 @@ The key insight is that matching **within exposure sets** removes confounding by
 
 ---
 
-## Six-Patient Illustration
+## Who is a comparator depends on when the switch happens
 
-The diagram below shows the six-patient example used throughout the package's tests. Persons 1–3 switch from treatment A to treatment B; persons 4–6 remain on A and serve as comparators.
+Six patients start a GLP-1 RA at month 0. Some later have bariatric surgery. The index line marks when a switch happens; comparator eligibility is assessed on that same day of therapy.
 
-```mermaid
-gantt
-    title Prevalent New-User Design — Six-Patient Cohort
-    dateFormat YYYY-MM-DD
-    axisFormat %b %Y
+**Panel 1 — Patient 2 switches to surgery at month 9**
 
-    section Person 1  (switcher · set 1)
-    Treatment A — 120 days     :done,    2020-01-01, 2020-04-30
-    Switches to B              :milestone, 2020-04-30, 0d
-    Treatment B                :active,  2020-04-30, 2021-12-31
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="man/figures/exposure-sets-month9-dark.svg">
+  <img src="man/figures/exposure-sets-month9.svg" alt="Timeline showing Patient 2 as switcher at month 9; Patients 1 and 3 are comparators on GLP-1 RA; Patient 4 ineligible (stopped GLP-1 RA); Patient 5 ineligible (already had surgery); Patient 6 ineligible (outcome before index)." width="760">
+</picture>
 
-    section Person 2  (switcher · set 1)
-    Treatment A — 120 days     :done,    2020-01-01, 2020-04-30
-    Switches to B              :milestone, 2020-04-30, 0d
-    Treatment B                :active,  2020-04-30, 2021-12-31
+**Panel 2 — Patient 5 switches to surgery at month 4**
 
-    section Person 3  (switcher · set 2)
-    Treatment A — 270 days     :done,    2020-01-01, 2020-09-27
-    Switches to B              :milestone, 2020-09-27, 0d
-    Treatment B                :active,  2020-09-27, 2021-12-31
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="man/figures/exposure-sets-month4-dark.svg">
+  <img src="man/figures/exposure-sets-month4.svg" alt="Timeline showing Patient 5 as switcher at month 4; Patients 1, 3, 4, and 6 are comparators on GLP-1 RA; Patient 2 is a comparator censored at their own surgery at month 9." width="760">
+</picture>
 
-    section Person 4  (comparator · sets 1 & 2)
-    Treatment A                :         2020-01-01, 2021-12-31
-    Indexed for set 1          :milestone, 2020-04-30, 0d
-    Indexed for set 2          :milestone, 2020-09-27, 0d
-
-    section Person 5  (comparator · sets 1 & 2)
-    Treatment A                :         2020-01-01, 2021-12-31
-    Indexed for set 1          :milestone, 2020-04-30, 0d
-    Indexed for set 2          :milestone, 2020-09-27, 0d
-
-    section Person 6  (comparator · sets 1 & 2)
-    Treatment A                :         2020-01-01, 2021-12-31
-    Indexed for set 1          :milestone, 2020-04-30, 0d
-    Indexed for set 2          :milestone, 2020-09-27, 0d
-```
-
-**Key observations:**
-
-- Persons 1 and 2 switch after **120 days** on A → they form **exposure set 1** (index date: 30 Apr 2020).
-- Person 3 switches after **270 days** on A → **exposure set 2** (index date: 27 Sep 2020).
-- Persons 4–6 never switch. They can be comparators in **both** sets: they are indexed at 30 Apr 2020 for set 1 (when they had also been on A for 120 days) and again at 27 Sep 2020 for set 2 (270 days on A). A person can appear as a comparator in multiple exposure sets.
-- The time-conditional propensity score (TCPS) is estimated by **conditional logistic regression stratified by exposure set**, so only persons within the same set are compared when estimating P(switch).
+Each switcher defines an exposure set: comparators are patients who, on the same day of GLP-1 RA therapy, are still taking it, haven't had surgery, and haven't had the outcome. The same patient can be a comparator in one set and a switcher in another (Patient 2), and someone ineligible at month 9 can be a comparator at month 4 (Patient 4).
 
 ---
 

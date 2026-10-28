@@ -78,7 +78,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 2: Exposure sets
 
-### Step 2.1 — R reference implementation [ ]
+### Step 2.1 — R reference implementation [x]
 
 **Goal:** A pure-R, no-SQL function that computes exposure sets from data frames, used to validate the SQL path.
 
@@ -93,7 +93,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 2.2 — SQL implementation [ ]
+### Step 2.2 — SQL implementation [x]
 
 **Goal:** Database-side exposure-set computation matching the R reference.
 
@@ -395,3 +395,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 1.1 | EmpiricalCalibration stays in Suggests | No change yet | Still not installed; jsonlite added to Imports instead |
 | 1.2 | "slots" in plan means Andromeda tables | cohorts/outcomes/exposureSets are DuckDB tables, not S4 slots | CovariateData has no extra S4 slots; all data is stored in the DuckDB database via Andromeda |
 | 1.2 | class() assignment must be single string | class(x) <- "PnuData" not c("PnuData","CovariateData") | Setting multiple class strings strips S4 semantics; the hierarchy is already encoded in setClass(contains=) |
+| 2.1 | Set 0 comparators not implemented | Deferred to StudyPopulation step (5.1) | Finding set-0 comparator index dates requires calendar-date matching, not era-history lookup; out of scope for the reference implementation |
+| 2.1 | do.call(rbind, c(rows, list(make.row.names=FALSE))) broken | Replaced with explicit empty-list guards + rownames(d)<-NULL | The make.row.names trick misbehaves when rows is empty or length-1 |
+| 2.2 | querySql returns upper-case column names | snakeCaseToCamelCase = FALSE + manual rename in the returned tibble | snakeCaseToCamelCase=TRUE would produce camelCase, requiring column name changes throughout |
+| 2.2 | expect_no_error() does not accept info argument | Replaced with try() + expect_false(inherits(..., "try-error")) | This version of testthat disallows extra ... in expect_no_error |
