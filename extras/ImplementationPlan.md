@@ -63,7 +63,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 1.2 — PnuData S4 class [ ]
+### Step 1.2 — PnuData S4 class [x]
 
 **Goal:** The in-memory data container that all downstream functions accept.
 
@@ -393,3 +393,5 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 0.2 | Exposure-set definition in fixture | Days on A (120 = ~4 months, 270 = ~9 months) rather than calendar months | Integer days avoids ambiguity in date arithmetic; tests can assert exact values |
 | 1.1 | Default for concept-ID vectors | `integer(0)` not `c()` in factory signature | `c()` evaluates to NULL in R, which fails `assertIntegerish(null.ok = FALSE)` |
 | 1.1 | EmpiricalCalibration stays in Suggests | No change yet | Still not installed; jsonlite added to Imports instead |
+| 1.2 | "slots" in plan means Andromeda tables | cohorts/outcomes/exposureSets are DuckDB tables, not S4 slots | CovariateData has no extra S4 slots; all data is stored in the DuckDB database via Andromeda |
+| 1.2 | class() assignment must be single string | class(x) <- "PnuData" not c("PnuData","CovariateData") | Setting multiple class strings strips S4 semantics; the hierarchy is already encoded in setClass(contains=) |
