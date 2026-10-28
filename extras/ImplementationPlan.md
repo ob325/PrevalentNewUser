@@ -144,7 +144,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 4: Simulation
 
-### Step 4.1 — simulatePnuData() [ ]
+### Step 4.1 — simulatePnuData() [x]
 
 **Goal:** Simulate a `PnuData` object with known treatment effect and covariate structure, so that statistical steps can be tested without a real database.
 
@@ -402,5 +402,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 2.3 | "ACNU pairing" scope | Only the switcher/target identity is tested here; full pipeline equivalence (matched comparators, outcome model) deferred to Phase 5+ | set-0 comparator index dates require calendar matching not yet implemented |
 | 3.1 | exposureSetDefinition not in PnuCohortArgs | Added as direct arg to getDbPnuData() (default "time") | Plan's Step 1.1 arg list for PnuCohortArgs has no such field; adding it there would change a ticked step |
 | 3.1 | Cyclops / ResultModelManager moved to Suggests | Not used until Phase 6+/10+; R CMD check warned about unused Imports | cli and pillar added to Imports (used in PnuData::show via ::) |
+| 4.1 | outcomeBaseRate and followUpDays added to plan args | Both needed for the exponential survival model; plan listed only logRr without specifying the rate scale | outcomeBaseRate = P(event | comparator, followUpDays) is the most interpretable parameterisation |
+| 4.1 | toJson() precision fixed (digits = 15) | jsonlite default (4 decimal places) silently corrupted logRr on round-trip | All float fields in SimulationArgs must survive JSON serialization; fix applied to AbstractSerializableSettings |
 | 3.1 | cohortId = -1 in getDbCovariateData | Skips cohort_definition_id WHERE clause; no extra column needed in #pnu_cohorts | Verified via FeatureExtraction SQL template pattern |
 | 3.1 | Andromeda preserves R attributes | metaData attr survives saveAndromeda/loadAndromeda; no extra table needed | Verified with small live test |

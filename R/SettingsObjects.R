@@ -46,7 +46,7 @@ AbstractSerializableSettings <- R6::R6Class(
       nms <- setdiff(ls(env, sorted = TRUE), ".__enclos_env__")
       flds <- Filter(function(nm) !is.function(env[[nm]]), nms)
       result <- stats::setNames(lapply(flds, function(nm) env[[nm]]), flds)
-      jsonlite::toJSON(result, pretty = TRUE, auto_unbox = TRUE, null = "null")
+      jsonlite::toJSON(result, pretty = TRUE, auto_unbox = TRUE, null = "null", digits = 15)
     },
 
     #' @description Validate the object's fields. Override in subclasses.

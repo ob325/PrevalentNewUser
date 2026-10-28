@@ -2,11 +2,13 @@
 
 S3method(print,summary.PnuData)
 export(createPnuCohortArgs)
+export(createSimulationArgs)
 export(getDbExposureSets)
 export(getDbPnuData)
 export(isPnuData)
 export(loadPnuData)
 export(savePnuData)
+export(simulatePnuData)
 exportClasses(PnuData)
 exportMethods(show)
 exportMethods(summary)
