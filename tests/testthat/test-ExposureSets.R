@@ -228,6 +228,87 @@ test_that("computeExposureSetsInR errors on wrong exposureSetDefinition", {
   )
 })
 
+# ---- Set-0 equivalence: all switchers have no prior A ----------------------
+#
+# When every B-starter has zero prior A their exposure_set is 0, and
+# computeExposureSetsInR() returns ONLY switcher rows (set-0 comparators
+# require calendar-date matching deferred to createStudyPopulation()).
+# This means the returned person_id + is_switcher column exactly reproduces
+# the ACNU "target" set — the same persons CohortMethod would label as targets.
+
+test_that("set-0: all switchers labelled is_switcher=TRUE with exposure_set=0", {
+  b_starts <- as.Date(c("2020-03-01", "2020-07-01", "2020-11-01"))
+
+  # Persons 1-3 start B with zero prior A (pure new users of B).
+  treatmentA <- data.frame(
+    cohort_definition_id = 1L,
+    subject_id           = c(4L, 5L),
+    cohort_start_date    = as.Date(c("2020-01-01", "2020-01-01")),
+    cohort_end_date      = as.Date(c("2022-12-31", "2022-12-31")),
+    stringsAsFactors     = FALSE
+  )
+  treatmentB <- data.frame(
+    cohort_definition_id = 2L,
+    subject_id           = c(1L, 2L, 3L),
+    cohort_start_date    = b_starts,
+    cohort_end_date      = rep(as.Date("2022-12-31"), 3L),
+    stringsAsFactors     = FALSE
+  )
+  observationPeriod <- data.frame(
+    person_id                     = c(1L, 2L, 3L, 4L, 5L),
+    observation_period_start_date = rep(as.Date("2019-01-01"), 5L),
+    observation_period_end_date   = rep(as.Date("2022-12-31"), 5L),
+    stringsAsFactors              = FALSE
+  )
+
+  result <- computeExposureSetsInR(treatmentA, treatmentB, observationPeriod)
+
+  # Exactly the three B-starters, all in set 0, all marked as switchers.
+  # This is the ACNU target set.
+  expect_equal(nrow(result), 3L)
+  expect_setequal(result$person_id, c("1", "2", "3"))
+  expect_true(all(result$exposure_set == 0L))
+  expect_true(all(result$is_switcher))
+
+  # Index dates are the B start dates (same as ACNU index dates)
+  result_sorted <- result[order(result$person_id), ]
+  expect_equal(result_sorted$index_date, sort(b_starts))
+
+  # A-only persons 4 and 5 do not appear (set-0 comparators are deferred)
+  expect_false(any(result$person_id %in% c("4", "5")))
+})
+
+test_that("set-0: fills definition also assigns exposure_set=0 for no-prior-A switchers", {
+  treatmentB <- data.frame(
+    cohort_definition_id = 2L,
+    subject_id           = 1L,
+    cohort_start_date    = as.Date("2020-06-01"),
+    cohort_end_date      = as.Date("2022-12-31"),
+    stringsAsFactors     = FALSE
+  )
+  observationPeriod <- data.frame(
+    person_id                     = 1L,
+    observation_period_start_date = as.Date("2019-01-01"),
+    observation_period_end_date   = as.Date("2022-12-31"),
+    stringsAsFactors              = FALSE
+  )
+
+  result <- computeExposureSetsInR(
+    treatmentA        = data.frame(
+      cohort_definition_id = integer(0), subject_id = integer(0),
+      cohort_start_date    = as.Date(character(0)),
+      cohort_end_date      = as.Date(character(0))
+    ),
+    treatmentB        = treatmentB,
+    observationPeriod = observationPeriod,
+    exposureSetDefinition = "fills"
+  )
+
+  expect_equal(nrow(result), 1L)
+  expect_equal(result$exposure_set, 0L)
+  expect_true(result$is_switcher)
+})
+
 # ---- SQL translation tests (no database required) ------------------------
 
 test_that("GetExposureSets.sql translates without error for all target dialects", {

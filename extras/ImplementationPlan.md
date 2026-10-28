@@ -110,7 +110,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 2.3 — Set 0 equivalence test [ ]
+### Step 2.3 — Set 0 equivalence test [x]
 
 **Goal:** Confirm that restricting to exposure set 0 produces the same target/comparator pairs as a hypothetical ACNU analysis.
 
@@ -399,3 +399,4 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 2.1 | do.call(rbind, c(rows, list(make.row.names=FALSE))) broken | Replaced with explicit empty-list guards + rownames(d)<-NULL | The make.row.names trick misbehaves when rows is empty or length-1 |
 | 2.2 | querySql returns upper-case column names | snakeCaseToCamelCase = FALSE + manual rename in the returned tibble | snakeCaseToCamelCase=TRUE would produce camelCase, requiring column name changes throughout |
 | 2.2 | expect_no_error() does not accept info argument | Replaced with try() + expect_false(inherits(..., "try-error")) | This version of testthat disallows extra ... in expect_no_error |
+| 2.3 | "ACNU pairing" scope | Only the switcher/target identity is tested here; full pipeline equivalence (matched comparators, outcome model) deferred to Phase 5+ | set-0 comparator index dates require calendar matching not yet implemented |
