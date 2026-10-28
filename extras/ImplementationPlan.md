@@ -248,7 +248,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 8: Covariate balance
 
-### Step 8.1 — computeCovariateBalance() [ ]
+### Step 8.1 — computeCovariateBalance() [x]
 
 **Goal:** Compute standardised mean differences (SMD) before and after matching.
 
@@ -263,7 +263,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 9: Outcome models
 
-### Step 9.1 — fitOutcomeModel() [ ]
+### Step 9.1 — fitOutcomeModel() [x]
 
 **Goal:** Fit a stratified Cox PH model for the matched sets.
 
@@ -415,3 +415,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 6.2 | TCPS trimming deferred | Option 3 chosen: no trimming in Phase 6; a trimByPs() utility will be added in Phase 8 alongside balance diagnostics | Trimming is most useful interactively after inspecting PS distributions; API should be designed with balance plots in mind |
 | 7.1 | matchPsInternal is compiled C++ in CohortMethod | Implemented pure-R greedy NN matching using findInterval() for O(n log n) range queries on sorted controls | No runtime dependency on CohortMethod; R implementation correct and fast enough for typical study populations |
 | 7.1 | allowReverseMatch default = FALSE | Matches CohortMethod default; in PNU there are typically more comparators than switchers so reversal is rarely needed | Confirmed from CohortMethod::createMatchOnPsArgs formals |
+| 8.1 | Variance formula uses Bernoulli (mean*(1-mean)) not empirical variance | Appropriate for sparse binary covariates from FeatureExtraction; simpler and consistent with OHDSI convention | Continuous covariates would need empirical variance; deferred until real-data testing |
+| 8.1 | "Before" population sourced from pnuData$studyPopulation | Matches CohortMethod's pattern of using cohortMethodData$cohorts; studyPopulation is unchanged by matchOnTcps | matchOnTcps returns a filtered data frame; does not modify pnuData |
+| 9.1 | fitOutcomeModel closely mirrors CohortMethod | Cyclops Cox call, informative-strata filter, CI extraction from confint() are identical pattern | PNU outcome model is the same statistical model — no fundamental difference |
+| 9.1 | useCovariates = TRUE implemented | Adds covariates from pnuData with a unique treatmentVarId above max(covariate_id); treatment coeff excluded from prior | Required merging treatment as an extra covariate alongside pnuData$covariates |
