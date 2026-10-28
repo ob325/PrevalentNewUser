@@ -136,6 +136,8 @@ isPnuData <- function(x) {
 
 # ---- show (print) --------------------------------------------------------
 
+#' @describeIn PnuData Print a concise summary of a PnuData object.
+#' @param object A `PnuData` object.
 #' @export
 setMethod("show", "PnuData", function(object) {
   cli::cat_line(pillar::style_subtle("# PnuData object"))

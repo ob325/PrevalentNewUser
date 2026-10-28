@@ -3,20 +3,30 @@
 S3method(print,summary.PnuData)
 export(createPnuCohortArgs)
 export(getDbExposureSets)
+export(getDbPnuData)
 export(isPnuData)
+export(loadPnuData)
+export(savePnuData)
 exportClasses(PnuData)
 exportMethods(show)
 exportMethods(summary)
 import(Andromeda)
 import(DatabaseConnector)
+import(FeatureExtraction)
 import(R6)
 import(dplyr)
+importFrom(cli,cat_line)
+importFrom(jsonlite,
+  fromJSON,
+  toJSON
+)
 importFrom(methods,
   is,
   new,
   setClass,
   setMethod
 )
+importFrom(pillar,style_subtle)
 importFrom(rlang,.data)
 importFrom(stats,
   coef,
@@ -31,3 +41,4 @@ importFrom(utils,
   tail,
   write.csv
 )
+importFrom(withr,with_seed)

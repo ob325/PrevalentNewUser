@@ -125,7 +125,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 3: Data loading
 
-### Step 3.1 — getDbPnuData() [ ]
+### Step 3.1 — getDbPnuData() [x]
 
 **Goal:** Pull cohorts, covariates and exposure sets from the CDM into a `PnuData` object.
 
@@ -400,3 +400,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 2.2 | querySql returns upper-case column names | snakeCaseToCamelCase = FALSE + manual rename in the returned tibble | snakeCaseToCamelCase=TRUE would produce camelCase, requiring column name changes throughout |
 | 2.2 | expect_no_error() does not accept info argument | Replaced with try() + expect_false(inherits(..., "try-error")) | This version of testthat disallows extra ... in expect_no_error |
 | 2.3 | "ACNU pairing" scope | Only the switcher/target identity is tested here; full pipeline equivalence (matched comparators, outcome model) deferred to Phase 5+ | set-0 comparator index dates require calendar matching not yet implemented |
+| 3.1 | exposureSetDefinition not in PnuCohortArgs | Added as direct arg to getDbPnuData() (default "time") | Plan's Step 1.1 arg list for PnuCohortArgs has no such field; adding it there would change a ticked step |
+| 3.1 | Cyclops / ResultModelManager moved to Suggests | Not used until Phase 6+/10+; R CMD check warned about unused Imports | cli and pillar added to Imports (used in PnuData::show via ::) |
+| 3.1 | cohortId = -1 in getDbCovariateData | Skips cohort_definition_id WHERE clause; no extra column needed in #pnu_cohorts | Verified via FeatureExtraction SQL template pattern |
+| 3.1 | Andromeda preserves R attributes | metaData attr survives saveAndromeda/loadAndromeda; no extra table needed | Verified with small live test |

@@ -3,7 +3,14 @@
 \docType{class}
 \name{PnuData-class}
 \alias{PnuData-class}
+\alias{show,PnuData-method}
 \title{An S4 class for prevalent new-user study data}
+\usage{
+\S4method{show}{PnuData}(object)
+}
+\arguments{
+\item{object}{A `PnuData` object.}
+}
 \description{
 `PnuData` extends `CovariateData` (from FeatureExtraction) and is the
 central data container passed between all analytical steps. Like
@@ -25,6 +32,11 @@ tables inherited from `CovariateData`):
 
 Create with [createEmptyPnuData()] (internal) or [getDbPnuData()] (Step 3.1).
 }
+\section{Methods (by generic)}{
+\itemize{
+\item \code{show(PnuData)}: Print a concise summary of a PnuData object.
+
+}}
 \references{
 Suissa S, Moodie EE, Dell'Aniello S. Prevalent new-user cohort designs for
 comparative drug effect studies by time-conditional propensity scores.

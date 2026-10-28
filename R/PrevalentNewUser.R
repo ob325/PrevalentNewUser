@@ -21,7 +21,12 @@
 #' @import Andromeda
 #' @import dplyr
 #' @import R6
+#' @import FeatureExtraction
 #' @importFrom rlang .data
 #' @importFrom stats coef confint median quantile sd
 #' @importFrom utils read.csv write.csv head tail
+#' @importFrom jsonlite toJSON fromJSON
+#' @importFrom withr with_seed
+#' @importFrom cli cat_line
+#' @importFrom pillar style_subtle
 NULL
