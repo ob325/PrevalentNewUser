@@ -5,3 +5,4 @@
 ^\.github$
 ^CLAUDE\.md$
 ^\.agent-shell$
+^README\.md$
