@@ -10,7 +10,7 @@
 
 ## Overview
 
-`PrevalentNewUser` is an [OHDSI HADES](https://ohdsi.github.io/Hades/) R package that implements the **prevalent new-user (PNU) cohort design** for observational studies using data mapped to the [OMOP Common Data Model](https://ohdsi.github.io/CommonDataModel/).
+`PrevalentNewUser` is an R package that implements the **prevalent new-user (PNU) cohort design** for observational studies using data mapped to the [OMOP Common Data Model](https://ohdsi.github.io/CommonDataModel/).
 
 The PNU design, introduced by Suissa, Moodie & Dell'Aniello (2017), extends the classic active-comparator new-user (ACNU) design to situations where the **comparator group has already been on the reference treatment** when the index date is defined. This is common in pharmacoepidemiology: you want to compare patients who *switch* from drug A to drug B against patients who *stay* on drug A, conditioning on how long each group had been on A before the switch.
 
