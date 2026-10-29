@@ -235,7 +235,7 @@ bootstrapCi <- function(population, pnuData = NULL, outcomeModelArgs, bootstrapA
   stratumIds <- unique(population$stratumId)
   nReps <- bootstrapArgs$numberOfReplications
 
-  message("Running ", nReps, " bootstrap replications...")
+  ParallelLogger::logInfo("Running ", nReps, " bootstrap replications...")
 
   # Run replications with withr to restore RNG state on exit
   useParallel <- bootstrapArgs$cores > 1L && .Platform$OS.type != "windows"
@@ -258,7 +258,7 @@ bootstrapCi <- function(population, pnuData = NULL, outcomeModelArgs, bootstrapA
 
   nFailed <- sum(is.na(bootLogRrs))
   if (nFailed > 0L) {
-    message(nFailed, " bootstrap replication(s) failed (no events in resampled strata) and were excluded.")
+    ParallelLogger::logWarn(nFailed, " bootstrap replication(s) failed (no events in resampled strata) and were excluded.")
   }
   bootLogRrs <- bootLogRrs[!is.na(bootLogRrs)]
 
