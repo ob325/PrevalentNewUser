@@ -13,8 +13,8 @@ Description: Implements the prevalent new-user (PNU) cohort design
     already been exposed when index dates are defined, complementing
     CohortMethod which implements the active-comparator new-user design.
 License: Apache License 2.0
-URL: https://github.com/OHDSI/PrevalentNewUser
-BugReports: https://github.com/OHDSI/PrevalentNewUser/issues
+URL: https://github.com/ob325/PrevalentNewUser
+BugReports: https://github.com/ob325/PrevalentNewUser/issues
 Depends:
     R (>= 4.2.0),
     DatabaseConnector (>= 6.0.0)

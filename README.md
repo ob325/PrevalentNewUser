@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![HADES](https://img.shields.io/badge/OHDSI-HADES-blue)](https://ohdsi.github.io/Hades/)
+[![Documentation](https://img.shields.io/badge/docs-pkgdown-blue)](https://ob325.github.io/PrevalentNewUser/)
 
 ---
 
@@ -14,7 +15,9 @@
 
 The PNU design, introduced by Suissa, Moodie & Dell'Aniello (2017), extends the classic active-comparator new-user (ACNU) design to situations where the **comparator group has already been on the reference treatment** when the index date is defined. This is common in pharmacoepidemiology: you want to compare patients who *switch* from drug A to drug B against patients who *stay* on drug A, conditioning on how long each group had been on A before the switch.
 
-`PrevalentNewUser` sits alongside [CohortMethod](https://github.com/OHDSI/CohortMethod), which implements the ACNU design. A PNU analysis restricted to patients with *no* prior reference treatment (exposure set 0) is mathematically equivalent to an ACNU analysis and should reproduce CohortMethod results.
+`PrevalentNewUser` sits alongside [CohortMethod](https://github.com/OHDSI/CohortMethod), which implements the ACNU design. The two packages are complementary: ACNU is appropriate when treatment-naive patients are available in sufficient numbers; PNU is appropriate when the population of interest consists primarily of patients who switch after a period of established therapy.
+
+Full documentation, including a vignette walking through a complete analysis, is available at the [pkgdown site](https://ob325.github.io/PrevalentNewUser/).
 
 ---
 
@@ -62,7 +65,7 @@ Each switcher defines an exposure set: comparators are patients who, on the same
 
 ```r
 # install.packages("remotes")
-remotes::install_github("OHDSI/PrevalentNewUser")
+remotes::install_github("ob325/PrevalentNewUser")
 ```
 
 ### System requirements
