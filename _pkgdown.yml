@@ -2,73 +2,88 @@ url: https://ob325.github.io/PrevalentNewUser
 
 template:
   bootstrap: 5
-  bootswatch: cosmo
+  bslib:
+    bootswatch: cosmo
 
 home:
-  title: "PrevalentNewUser"
-  description: >
-    Implements the prevalent new-user (PNU) cohort design for OMOP CDM data.
+  links:
+  - text: Ask a question
+    href: http://forums.ohdsi.org
 
 navbar:
   structure:
-    left: [intro, reference, articles, news]
+    left:  [intro, reference, articles, news]
+    right: [hades, github]
   components:
     intro:
       text: "Get started"
       href: articles/SingleStudy.html
+    hades:
+      text: hadesLogo
+      href: https://ohdsi.github.io/Hades
 
 reference:
-  - title: "Settings objects"
+  - title: "Getting data"
     desc: >
-      Every settings object has a `create*Args()` factory function.
-      Pass the object to the corresponding `run*()` or `fit*()` function.
-    contents:
-      - createPnuCohortArgs
-      - createSimulationArgs
-      - createStudyPopulationArgs
-      - createTcpsArgs
-      - createMatchingArgs
-      - createCovariateBalanceArgs
-      - createOutcomeModelArgs
-      - createBootstrapArgs
-      - createPnuAnalysisArgs
-
-  - title: "Data access"
+      Functions for extracting cohorts, exposure sets, and covariates from a
+      database in the OMOP Common Data Model.
     contents:
       - getDbPnuData
+      - getDbExposureSets
       - savePnuData
       - loadPnuData
+      - isPnuData
+      - PnuData-class
+      - summary,PnuData-method
 
   - title: "Simulation"
+    desc: >
+      Functions for generating synthetic PNU study populations with a known
+      treatment effect, for testing and method development.
     contents:
+      - createSimulationArgs
       - simulatePnuData
 
   - title: "Analysis pipeline"
+    desc: >
+      Functions that implement the sequential steps of a PNU analysis.
     contents:
+      - createStudyPopulationArgs
       - createStudyPopulation
+      - createTcpsArgs
       - fitTcps
+      - createMatchingArgs
       - matchOnTcps
+      - createBalanceArgs
       - computeCovariateBalance
+      - createOutcomeModelArgs
       - fitOutcomeModel
+      - createBootstrapArgs
       - bootstrapCi
 
-  - title: "Orchestration"
-    contents:
-      - runPnuAnalyses
-
   - title: "Calibration"
+    desc: >
+      Empirical calibration of p-values and confidence intervals using
+      negative control outcomes.
     contents:
       - calibrateEstimates
 
-  - title: "Results"
+  - title: "Running multiple analyses"
+    desc: >
+      Functions for running multiple analysis variants in a single call.
     contents:
+      - createPnuCohortArgs
+      - createPnuAnalysisArgs
+      - runPnuAnalyses
+
+  - title: "Results and export"
+    desc: >
+      Functions for exporting results to CSV and uploading to a results
+      database compatible with Strategus and OhdsiShinyAppBuilder.
+    contents:
+      - exportToCsv
       - createResultsDataModel
       - uploadResults
-      - exportToCsv
-
-  - title: "Data class"
-    contents:
-      - PnuData-class
 
 articles:
   - title: "Vignettes"
