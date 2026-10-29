@@ -1,0 +1,419 @@
+# Running a Single PNU Analysis
+
+## Overview
+
+This vignette walks through a complete prevalent new-user (PNU)
+analysis. Code blocks show the full workflow using simulated data (no
+database required) and a database-backed workflow side by side. All code
+is correct and runnable in an R session with the package and its
+suggested dependencies installed.
+
+## Background
+
+The PNU design conditions on how long a patient has been on the
+**reference treatment (A)** at the time of the **index event (B)**.
+Patients who switch from A to B are the *switchers* (target cohort).
+Patients still on A are eligible *comparators*, indexed on the same day
+of their A therapy as the matched switcher. Groups of patients who share
+the same duration on A form **exposure sets**, and the time-conditional
+propensity score (TCPS) is estimated within those sets by conditional
+logistic regression.
+
+> Suissa S, Moodie EE, Dell’Aniello S. Prevalent new-user cohort designs
+> for comparative drug effect studies by time-conditional propensity
+> scores. *Pharmacoepidemiol Drug Saf* 2017;**26**(4):459–468.
+> doi:[10.1002/pds.4117](https://doi.org/10.1002/pds.4117)
+
+## Step 1 — Simulate data
+
+[`simulatePnuData()`](https://ob325.github.io/PrevalentNewUser/reference/simulatePnuData.md)
+generates a synthetic cohort with a known true effect, making it useful
+for testing and method development. The true hazard ratio in the
+simulation below is 1.5.
+
+``` r
+
+library(PrevalentNewUser)
+
+simArgs <- createSimulationArgs(
+  nSwitchers         = 500L,
+  nComparatorsPerSet = 500L,
+  nExposureSets      = 3L,
+  nCovariates        = 100L,
+  outcomeBaseRate    = 0.15,
+  logRr              = log(1.5),   # true HR = 1.5
+  seed               = 42L
+)
+
+pnuData <- simulatePnuData(simArgs)
+pnuData
+```
+
+## Step 2 — Create study population
+
+[`createStudyPopulation()`](https://ob325.github.io/PrevalentNewUser/reference/createStudyPopulation.md)
+applies eligibility criteria and attaches risk windows to the cohort.
+The result is stored as an Andromeda table inside `pnuData`.
+
+``` r
+
+spArgs <- createStudyPopulationArgs(
+  outcomeId         = 1L,
+  riskWindowStart   = 0L,
+  riskWindowEnd     = 365L,
+  endAnchor         = "cohort start",
+  requireTimeAtRisk = FALSE
+)
+
+pnuData <- createStudyPopulation(pnuData, spArgs)
+
+# Collect the study population into memory
+pop <- dplyr::collect(pnuData$studyPopulation)
+nrow(pop)
+```
+
+## Step 3 — Fit the time-conditional propensity score
+
+[`fitTcps()`](https://ob325.github.io/PrevalentNewUser/reference/fitTcps.md)
+estimates the TCPS by conditional logistic regression (via Cyclops),
+stratified by exposure set. It returns the study population data frame
+with a `propensityScore` column added.
+
+``` r
+
+tcpsArgs <- createTcpsArgs()
+pop <- fitTcps(pop, pnuData, tcpsArgs)
+
+summary(pop$propensityScore)
+```
+
+## Step 4 — Match on TCPS
+
+[`matchOnTcps()`](https://ob325.github.io/PrevalentNewUser/reference/matchOnTcps.md)
+performs nearest-neighbour matching within each exposure set.
+
+``` r
+
+matchArgs <- createMatchingArgs(
+  maxRatio = 4L,
+  caliper  = 0.2
+)
+
+matchedPop <- matchOnTcps(pop, matchArgs)
+
+cat(sprintf(
+  "Matched population: %d switchers, %d comparators\n",
+  sum(matchedPop$treatment == 1L),
+  sum(matchedPop$treatment == 0L)
+))
+```
+
+## Step 5 — Covariate balance
+
+[`computeCovariateBalance()`](https://ob325.github.io/PrevalentNewUser/reference/computeCovariateBalance.md)
+computes standardised mean differences (SMD) before and after matching.
+SMDs below 0.1 indicate adequate balance.
+
+``` r
+
+balArgs <- createBalanceArgs()
+balance <- computeCovariateBalance(matchedPop, pnuData, balArgs)
+
+# Show the five covariates with the largest absolute post-matching SMD
+balance |>
+  dplyr::arrange(dplyr::desc(abs(afterMatchingSmd))) |>
+  dplyr::select(covariate_name, beforeMatchingSmd, afterMatchingSmd) |>
+  head(5)
+```
+
+## Step 6 — Fit outcome model
+
+[`fitOutcomeModel()`](https://ob325.github.io/PrevalentNewUser/reference/fitOutcomeModel.md)
+fits a stratified Cox proportional-hazards model (via Cyclops) with the
+matched sets as strata.
+
+``` r
+
+omArgs <- createOutcomeModelArgs()
+result <- fitOutcomeModel(matchedPop, pnuData, omArgs)
+
+cat(sprintf(
+  "HR = %.3f  (95%% CI %.3f–%.3f)\n",
+  exp(result$logRr),
+  result$ci95Lb,
+  result$ci95Ub
+))
+```
+
+## Step 7 — Bootstrap confidence interval (optional)
+
+[`bootstrapCi()`](https://ob325.github.io/PrevalentNewUser/reference/bootstrapCi.md)
+replaces the Wald CI with a stratum-resampling bootstrap. Use this when
+the normal approximation is suspect (small matched sets, rare outcomes).
+
+``` r
+
+bsArgs   <- createBootstrapArgs(numberOfReplications = 500L, seed = 1L)
+bsResult <- bootstrapCi(matchedPop, pnuData, omArgs, bsArgs)
+
+cat(sprintf(
+  "Bootstrap CI: %.3f–%.3f\n",
+  bsResult$ci95Lb,
+  bsResult$ci95Ub
+))
+```
+
+## Using the top-level orchestrator
+
+For a full study with multiple analysis variants,
+[`runPnuAnalyses()`](https://ob325.github.io/PrevalentNewUser/reference/runPnuAnalyses.md)
+handles iteration, error recovery, and file output:
+
+``` r
+
+analyses <- list(
+  createPnuAnalysisArgs(
+    analysisId          = 1L,
+    description         = "primary (caliper 0.2)",
+    studyPopulationArgs = spArgs,
+    tcpsArgs            = tcpsArgs,
+    matchingArgs        = matchArgs,
+    outcomeModelArgs    = omArgs
+  ),
+  createPnuAnalysisArgs(
+    analysisId          = 2L,
+    description         = "sensitivity (no caliper)",
+    studyPopulationArgs = spArgs,
+    tcpsArgs            = tcpsArgs,
+    matchingArgs        = createMatchingArgs(caliper = 0L, maxRatio = 4L),
+    outcomeModelArgs    = omArgs
+  )
+)
+
+outputFolder <- file.path(tempdir(), "pnu_demo")
+
+summary <- runPnuAnalyses(
+  pnuAnalysisList = analyses,
+  outputFolder    = outputFolder,
+  pnuDataList     = list(pnuData, pnuData)   # one entry per analysis; omit for DB workflow
+)
+
+summary[, c("analysis_id", "description", "log_rr", "status")]
+```
+
+## Exporting results
+
+[`exportToCsv()`](https://ob325.github.io/PrevalentNewUser/reference/exportToCsv.md)
+writes flat CSV files ready for Strategus aggregation or a Shiny results
+viewer.
+
+``` r
+
+exportFolder <- file.path(tempdir(), "pnu_export")
+
+exportToCsv(
+  outputFolder = outputFolder,
+  exportFolder = exportFolder,
+  databaseId   = "Synpuf_5pct"
+)
+
+list.files(exportFolder)
+```
+
+## Empirical calibration (optional)
+
+When negative control outcomes are available, use
+[`calibrateEstimates()`](https://ob325.github.io/PrevalentNewUser/reference/calibrateEstimates.md)
+to correct for residual systematic error before exporting.
+
+``` r
+
+# negativeControls must be a data frame with logRr and seLogRr columns
+calibrated <- calibrateEstimates(
+  estimates               = summary,
+  negativeControlOutcomes = negativeControls
+)
+
+# Write the calibrated summary back and re-export
+utils::write.csv(calibrated, file.path(outputFolder, "summary.csv"),
+                 row.names = FALSE)
+exportToCsv(outputFolder, exportFolder, databaseId = "Synpuf_5pct")
+```
+
+## Database workflow
+
+Running a PNU analysis against a real CDM database requires three steps
+before
+[`getDbPnuData()`](https://ob325.github.io/PrevalentNewUser/reference/getDbPnuData.md):
+define the cohorts with `Capr`, generate them with `CohortGenerator`,
+and then connect and load. Everything from Step 2 onwards is identical
+to the simulated-data workflow above.
+
+### Connecting to the database
+
+``` r
+
+connectionDetails <- DatabaseConnector::createConnectionDetails(
+  dbms     = "postgresql",
+  server   = "myserver/mydb",
+  user     = Sys.getenv("DB_USER"),
+  password = Sys.getenv("DB_PASSWORD")
+)
+
+cdmDatabaseSchema    <- "cdm"
+cohortDatabaseSchema <- "results"
+cohortTable          <- "pnu_cohorts"
+```
+
+### Defining cohorts with Capr
+
+This example implements a PNU study comparing GLP-1 receptor agonists
+(tirzepatide or semaglutide — treatment A, the reference) against
+bariatric surgery (treatment B, the switcher event). Patients must be 18
+or older at cohort entry.
+
+The **GLP-1 RA cohort** combines tirzepatide (concept 779705) and
+semaglutide (concept 793143) into a single concept set, so a patient
+enters the cohort at their first dispensing of either agent and exits
+when a 45-day gap in supply occurs. The 45-day persistence window
+accommodates monthly injectable formulations.
+
+The **bariatric surgery cohort** is defined by a single procedure
+concept (4326683) and exits at the end of the patient’s observation
+period, since the index date is a one-time operative event.
+
+``` r
+
+library(Capr)
+
+# --- Treatment A: GLP-1 receptor agonists (composite) -----------------------
+
+glp1ra <- cs(
+  descendants(779705L),   # tirzepatide
+  descendants(793143L),   # semaglutide
+  name = "GLP-1 receptor agonists"
+)
+
+glp1raCohort <- cohort(
+  entry = entry(
+    drugExposure(glp1ra, age(gte(18L))),
+    primaryCriteriaLimit = "First"
+  ),
+  exit = exit(
+    endStrategy = drugExit(glp1ra,
+                           persistenceWindow  = 45L,
+                           surveillanceWindow = 0L)
+  )
+)
+
+# --- Treatment B: bariatric operative procedure -----------------------------
+
+bariatricCs <- cs(
+  descendants(4326683L),
+  name = "Bariatric operative procedure"
+)
+
+bariatricCohort <- cohort(
+  entry = entry(
+    procedure(bariatricCs, age(gte(18L))),
+    primaryCriteriaLimit = "First"
+  ),
+  exit = exit(
+    endStrategy = observationExit()
+  )
+)
+
+# Cohort IDs are assigned in order: 1 = GLP-1 RA, 2 = bariatric surgery
+exposureCohorts <- makeCohortSet(glp1raCohort, bariatricCohort)
+```
+
+### Generating cohorts with CohortGenerator
+
+``` r
+
+library(CohortGenerator)
+
+cohortTableNames <- getCohortTableNames(cohortTable = cohortTable)
+
+createCohortTables(
+  connectionDetails    = connectionDetails,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTableNames     = cohortTableNames
+)
+
+generateCohortSet(
+  connectionDetails    = connectionDetails,
+  cdmDatabaseSchema    = cdmDatabaseSchema,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTableNames     = cohortTableNames,
+  cohortDefinitionSet  = exposureCohorts
+)
+
+# Verify cohort counts
+sql <- "SELECT cohort_definition_id, COUNT(*) AS n
+        FROM @cohortDatabaseSchema.@cohortTable
+        GROUP BY cohort_definition_id"
+DatabaseConnector::renderTranslateQuerySql(
+  connection           = DatabaseConnector::connect(connectionDetails),
+  sql                  = sql,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTable          = cohortTable
+)
+```
+
+### Loading PNU data
+
+The GLP-1 RA cohort is the reference treatment A (`targetCohortId = 1`),
+and the bariatric surgery cohort marks the switcher index dates
+(`comparatorCohortId = 2`). Exclude the GLP-1 RA concept IDs and their
+descendants from the covariates so the propensity model does not
+condition on the exposure itself.
+
+``` r
+
+covariateSettings <- FeatureExtraction::createDefaultCovariateSettings(
+  excludedCovariateConceptIds   = c(779705L, 793143L),
+  addDescendantsToExclude       = TRUE
+)
+
+pnuCohortArgs <- createPnuCohortArgs(
+  targetCohortId     = 1L,   # GLP-1 RA (reference treatment A)
+  comparatorCohortId = 2L,   # bariatric surgery (switcher / treatment B)
+  outcomeCohortId    = 3L    # define and generate separately
+)
+
+pnuData <- getDbPnuData(
+  connectionDetails    = connectionDetails,
+  cdmDatabaseSchema    = cdmDatabaseSchema,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTable          = cohortTable,
+  pnuCohortArgs        = pnuCohortArgs,
+  covariateSettings    = covariateSettings
+)
+
+# Then proceed with Steps 2–7 or runPnuAnalyses() above
+```
+
+## Storing results in a database
+
+For multi-database studies, upload results to a shared results schema
+using the results data model functions.
+
+``` r
+
+resultsConnectionDetails <- DatabaseConnector::createConnectionDetails(
+  dbms   = "sqlite",
+  server = "results.sqlite"
+)
+
+createResultsDataModel(resultsConnectionDetails, databaseSchema = "main")
+uploadResults(resultsConnectionDetails, databaseSchema = "main",
+              resultsFolder = outputFolder)
+```
+
+## Session info
+
+``` r
+
+sessionInfo()
+```

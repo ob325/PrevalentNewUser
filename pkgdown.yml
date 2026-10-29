@@ -1,0 +1,9 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  SingleStudy: SingleStudy.html
+last_built: 2026-10-29T18:07Z
+urls:
+  reference: https://ob325.github.io/PrevalentNewUser/reference
+  article: https://ob325.github.io/PrevalentNewUser/articles

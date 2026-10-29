@@ -1,0 +1,50 @@
+# Simulate a PnuData object with a known treatment effect
+
+Generates a \[PnuData\] object whose treatment effect, covariate
+structure, and outcome rates are determined by \`simulationArgs\`. All
+random draws are made under \`withr::with_seed()\` so the caller's RNG
+state is restored on exit.
+
+\*\*Outcome model\*\* Outcome times follow Exp(lambda) where \`lambda =
+lambda0 \* exp(logRr \* treatment)\` per day, and \`lambda0\` is chosen
+so that P(event in \`followUpDays\` \| comparator) =
+\`outcomeBaseRate\`.
+
+\*\*Covariate model\*\* Each of the \`nCovariates\` binary covariates is
+drawn independently. P(X = 1 \| comparator) = \`prevalenceBase\`; P(X =
+1 \| switcher) = min(1, \`prevalenceBase + prevalenceDiff\`). Covariates
+predict treatment assignment only, so the crude outcome rate ratio
+equals \`exp(logRr)\` asymptotically.
+
+## Usage
+
+``` r
+simulatePnuData(simulationArgs)
+```
+
+## Arguments
+
+- simulationArgs:
+
+  A \`SimulationArgs\` object from \[createSimulationArgs()\].
+
+## Value
+
+A \[PnuData\] object. The caller is responsible for closing it with
+\`Andromeda::close()\`. \`attr(result, "metaData")\$simulationArgs\`
+contains a JSON snapshot of \`simulationArgs\`.
+
+## See also
+
+\[createSimulationArgs()\]
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+simArgs <- createSimulationArgs(nSwitchers = 500L, logRr = log(2), seed = 1L)
+pnuData <- simulatePnuData(simArgs)
+summary(pnuData)
+Andromeda::close(pnuData)
+} # }
+```

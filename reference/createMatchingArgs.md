@@ -1,0 +1,66 @@
+# Create matching arguments
+
+Specifies all parameters for \[matchOnTcps()\], which performs greedy
+nearest-neighbour matching of switchers to comparators within each
+exposure set using the time-conditional propensity score.
+
+## Usage
+
+``` r
+createMatchingArgs(
+  caliper = 0.2,
+  caliperScale = "standardized logit",
+  maxRatio = 1L,
+  allowReverseMatch = FALSE
+)
+```
+
+## Arguments
+
+- caliper:
+
+  (\`numeric(1)\`) Caliper width. When \`caliperScale = "standardized
+  logit"\` (default), this is a fraction of the pooled SD of the
+  logit-PS across the whole population. When \`caliperScale = "logit"\`,
+  it is an absolute width in logit units. \`0\` disables the caliper
+  (match the globally nearest comparator). Default: \`0.2\`.
+
+- caliperScale:
+
+  (\`character(1)\`) One of \`"standardized logit"\` (default) or
+  \`"logit"\`.
+
+- maxRatio:
+
+  (\`integer(1)\`) Maximum number of comparators matched to each
+  switcher. \`0\` means variable ratio: every available comparator
+  within the caliper is matched. Default: \`1\`.
+
+- allowReverseMatch:
+
+  (\`logical(1)\`) If \`TRUE\` and a set has more switchers than
+  comparators, flip roles so the minority arm (comparators) is indexed
+  and each comparator finds up to \`maxRatio\` switcher matches. The
+  treatment column in the returned population is restored to its
+  original labels. Default: \`FALSE\`.
+
+## Value
+
+A \`MatchingArgs\` R6 object.
+
+## See also
+
+\[matchOnTcps()\]
+
+## Examples
+
+``` r
+# Default 1:1 matching with 0.2 standardized-logit caliper
+matchingArgs <- createMatchingArgs()
+
+# 1:2 matching (up to two comparators per switcher)
+matchingArgs <- createMatchingArgs(maxRatio = 2L)
+
+# Variable-ratio matching (all within caliper)
+matchingArgs <- createMatchingArgs(maxRatio = 0L)
+```
