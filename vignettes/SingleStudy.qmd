@@ -208,7 +208,7 @@ outputFolder <- file.path(tempdir(), "pnu_demo")
 summary <- runPnuAnalyses(
   pnuAnalysisList = analyses,
   outputFolder    = outputFolder,
-  pnuDataList     = list(pnuData)   # pre-loaded data; omit for DB workflow
+  pnuDataList     = list(pnuData, pnuData)   # one entry per analysis; omit for DB workflow
 )
 
 summary[, c("analysis_id", "description", "log_rr", "status")]
