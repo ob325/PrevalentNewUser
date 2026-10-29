@@ -39,6 +39,7 @@ Suggests:
     CohortMethod,
     Eunomia,
     testthat (>= 3.0.0),
+    quarto,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

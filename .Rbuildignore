@@ -7,3 +7,4 @@
 ^\.agent-shell$
 ^README\.md$
 ^_pkgdown\.yml$
+^vignettes/SingleStudy\.qmd$
