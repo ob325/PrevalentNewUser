@@ -1,5 +1,7 @@
 # PrevalentNewUser
 
+> **Warning:** This package is experimental and under active development. The statistical methods have not yet been validated. Do not use it for research or clinical decision-making until validation is complete.
+
 **Prevalent New-User Cohort Design for OMOP CDM Data**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
