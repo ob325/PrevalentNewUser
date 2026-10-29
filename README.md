@@ -17,7 +17,7 @@ The PNU design, introduced by Suissa, Moodie & Dell'Aniello (2017), extends the 
 
 `PrevalentNewUser` sits alongside [CohortMethod](https://github.com/OHDSI/CohortMethod), which implements the ACNU design. The two packages are complementary: ACNU is appropriate when treatment-naive patients are available in sufficient numbers; PNU is appropriate when the population of interest consists primarily of patients who switch after a period of established therapy.
 
-Full documentation, including a vignette walking through a complete analysis, is available at the [pkgdown site](https://ob325.github.io/PrevalentNewUser/).
+Full documentation is available at the [pkgdown site](https://ob325.github.io/PrevalentNewUser/), including a [vignette walking through a complete single-study analysis](https://ob325.github.io/PrevalentNewUser/articles/SingleStudy.html).
 
 ---
 
