@@ -51,7 +51,7 @@ A tibble with one row per analysis and columns `analysis_id`,
   returned invisibly. The same table is written to
   `outputFolder/summary.csv`. Each analysis's full result (matched
   population, outcome model, optional balance and bootstrap) is saved as
-  `outputFolder/analysis_{id}.rds`.
+  `outputFolder/analysis_<id>.rds`.
 }
 \description{
 Top-level orchestrator for the PNU pipeline. For each [PnuAnalysis] in

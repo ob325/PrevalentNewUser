@@ -6,3 +6,4 @@
 ^CLAUDE\.md$
 ^\.agent-shell$
 ^README\.md$
+^_pkgdown\.yml$

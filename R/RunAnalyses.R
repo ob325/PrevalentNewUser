@@ -352,7 +352,7 @@ createPnuAnalysisArgs <- function(analysisId = 1L,
 #'   returned invisibly. The same table is written to
 #'   `outputFolder/summary.csv`. Each analysis's full result (matched
 #'   population, outcome model, optional balance and bootstrap) is saved as
-#'   `outputFolder/analysis_{id}.rds`.
+#'   `outputFolder/analysis_<id>.rds`.
 #'
 #' @seealso [createPnuAnalysisArgs()], [fitOutcomeModel()], [bootstrapCi()]
 #'

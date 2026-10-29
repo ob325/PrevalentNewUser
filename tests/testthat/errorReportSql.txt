@@ -1,0 +1,28 @@
+DBMS:
+sqlite
+
+Error:
+no such table: pnu_estimate
+
+SQL:
+SELECT log_rr FROM pnu_estimate;
+
+R version:
+R version 4.6.1 (2026-06-24)
+
+Platform:
+aarch64-apple-darwin23
+
+Attached base packages:
+- stats
+- graphics
+- grDevices
+- utils
+- datasets
+- methods
+- base
+
+Other attached packages:
+- PrevalentNewUser (0.0.1)
+- DatabaseConnector (8.0.0)
+- testthat (3.3.2)

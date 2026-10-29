@@ -3,6 +3,7 @@
 S3method(print,OutcomeModel)
 S3method(print,summary.PnuData)
 export(bootstrapCi)
+export(calibrateEstimates)
 export(computeCovariateBalance)
 export(createBalanceArgs)
 export(createBootstrapArgs)
@@ -10,10 +11,12 @@ export(createMatchingArgs)
 export(createOutcomeModelArgs)
 export(createPnuAnalysisArgs)
 export(createPnuCohortArgs)
+export(createResultsDataModel)
 export(createSimulationArgs)
 export(createStudyPopulation)
 export(createStudyPopulationArgs)
 export(createTcpsArgs)
+export(exportToCsv)
 export(fitOutcomeModel)
 export(fitTcps)
 export(getDbExposureSets)
@@ -24,6 +27,7 @@ export(matchOnTcps)
 export(runPnuAnalyses)
 export(savePnuData)
 export(simulatePnuData)
+export(uploadResults)
 exportClasses(PnuData)
 exportMethods(show)
 exportMethods(summary)
@@ -32,6 +36,12 @@ import(DatabaseConnector)
 import(FeatureExtraction)
 import(R6)
 import(dplyr)
+importFrom(EmpiricalCalibration,
+  calibrateConfidenceInterval,
+  calibrateP,
+  convertNullToErrorModel,
+  fitNull
+)
 importFrom(cli,cat_line)
 importFrom(jsonlite,
   fromJSON,

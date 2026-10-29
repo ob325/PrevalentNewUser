@@ -319,7 +319,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 12: Calibration
 
-### Step 12.1 — calibrateEstimates() [ ]
+### Step 12.1 — calibrateEstimates() [x]
 
 **Goal:** Apply empirical calibration to a set of estimates using negative controls.
 
@@ -334,7 +334,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 13: Export and results data model
 
-### Step 13.1 — Results data model [ ]
+### Step 13.1 — Results data model [x]
 
 **Goal:** Define the database schema for results storage (compatible with ResultModelManager / ShinyApp).
 
@@ -348,7 +348,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 13.2 — exportToCsv() [ ]
+### Step 13.2 — exportToCsv() [x]
 
 **Goal:** Write analysis results to flat CSV files matching the results data model.
 
@@ -363,7 +363,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ## Phase 14: Polish
 
-### Step 14.1 — Vignette: single-analysis walkthrough [ ]
+### Step 14.1 — Vignette: single-analysis walkthrough [x]
 
 **Files**
 - `vignettes/SingleStudy.Rmd`
@@ -372,7 +372,7 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 14.2 — pkgdown, README, NEWS [ ]
+### Step 14.2 — pkgdown, README, NEWS [x]
 
 **Files**
 - `README.md`
@@ -423,3 +423,14 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 10.1 | Duplicate row_id in resampled population | Reassign row_id = seq_len(nrow) after rbind; Cyclops rejects repeated rowId-covariateId pairs | Strata sampled more than once produce identical row_ids from the original population |
 | 11.1 | PnuAnalysis toJson only serializes primitive fields | Nested settings objects (TcpsArgs, MatchingArgs, etc.) contain Cyclops environments; only analysisId + description round-trip through JSON | Nested reconstruction would require a class-dispatch registry; deferred |
 | 11.1 | parallelComputing accepted but not implemented | Parameter reserved for future use; analyses always run sequentially | Parallel DB connections + Andromeda in multiple processes requires careful design; out of scope for Step 11.1 |
+| 12.1 | EmpiricalCalibration promoted to Imports | Moved from Suggests to Imports; added importFrom for fitNull, convertNullToErrorModel, calibrateConfidenceInterval, calibrateP | Now actually used in code; Suggests is for optional enhancements only |
+| 12.1 | calibrateConfidenceInterval requires systematicErrorModel | Must call convertNullToErrorModel(fitNull(...)) before passing to calibrateConfidenceInterval | Direct null → calibrateConfidenceInterval fails with "missing value where TRUE/FALSE needed" |
+| 13.1 | Spec uses bare table names (no pnu_ prefix) | Prefix applied dynamically; spec has "analysis", "estimate", "covariate_balance" | Default tablePrefix="pnu_" avoids double-prefix (pnu_pnu_analysis) when spec names already contained pnu_ |
+| 13.1 | DatabaseConnector insertTable requires databaseSchema + bare tableName separately | "main.pnu_analysis" passed as tableName creates a literal-dot table on SQLite | Pass databaseSchema="main" and tableName="pnu_analysis" as separate arguments |
+| 13.1 | createConnectionDetails NSE re-evaluates tempfile() on each connect | Pre-assign f <- normalizePath(tempfile(…)); createConnectionDetails(server = f) | Captured symbol f is constant; inline expression re-evaluates on every connect() |
+| 13.2 | minCellCount accepted but not yet applied | No raw count columns in current data model; parameter reserved for future suppression | Documented in @details; avoids a breaking API change when cohort sizes are added |
+| 13.2 | database_id added to exported CSVs but not to spec | Spec governs per-database DB tables; CSVs are for multi-database aggregation | Consistent with Strategus/ResultModelManager convention of adding database_id at export time |
+| 14.1 | Vignette uses eval=FALSE globally (illustrative code only) | Cyclops and Andromeda are in Suggests; vignette cannot assume they are installed during R CMD check | Standard OHDSI HADES pattern for vignettes with optional/database dependencies |
+| 14.1 | Inline r-expressions fail when chunk eval=FALSE | Objects created in eval=FALSE chunks don't exist; inline expressions always evaluate | Replace with literal values or eval=TRUE for session-info-only chunks |
+| 14.2 | _pkgdown.yml added to .Rbuildignore | R CMD check NOTE: "Non-standard file/directory found at top level" | pkgdown config is a dev-only file; standard to exclude from the package bundle |
+| 14.2 | {tablePrefix} and {id} in roxygen backticks cause Rd NOTE | Rd processor interprets {} as commands even inside code spans | Replaced with <tablePrefix> and <id> notation (angle brackets are safe in Rd) |

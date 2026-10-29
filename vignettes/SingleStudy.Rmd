@@ -1,0 +1,299 @@
+---
+title: "Running a Single PNU Analysis"
+author: "Bill O'Brien"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: false
+vignette: >
+  %\VignetteIndexEntry{Running a Single PNU Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+## Overview
+
+This vignette walks through a complete prevalent new-user (PNU) analysis. Code
+blocks show the full workflow using simulated data (no database required) and
+a database-backed workflow side by side. All code is correct and runnable in an
+R session with the package and its suggested dependencies installed.
+
+## Background
+
+The PNU design conditions on how long a patient has been on the **reference
+treatment (A)** at the time of the **index event (B)**. Patients who switch from
+A to B are the *switchers* (target cohort). Patients still on A are eligible
+*comparators*, indexed on the same day of their A therapy as the matched
+switcher. Groups of patients who share the same duration on A form **exposure
+sets**, and the time-conditional propensity score (TCPS) is estimated within
+those sets by conditional logistic regression.
+
+```
+Suissa S, Moodie EE, Dell'Aniello S.
+Prevalent new-user cohort designs for comparative drug effect studies by
+time-conditional propensity scores.
+Pharmacoepidemiol Drug Saf 2017;26(4):459-468.
+doi:10.1002/pds.4117
+```
+
+## Step 1 — Simulate data
+
+`simulatePnuData()` generates a synthetic cohort with a known true effect,
+making it useful for testing and method development. The true hazard ratio in
+the simulation below is 1.5.
+
+```{r simulate}
+library(PrevalentNewUser)
+
+simArgs <- createSimulationArgs(
+  nSwitchers         = 500L,
+  nComparatorsPerSet = 500L,
+  nExposureSets      = 3L,
+  nCovariates        = 10L,
+  outcomeBaseRate    = 0.15,
+  logRr              = log(1.5),   # true HR = 1.5
+  seed               = 42L
+)
+
+pnuData <- simulatePnuData(simArgs)
+pnuData
+```
+
+## Step 2 — Create study population
+
+`createStudyPopulation()` applies eligibility criteria and attaches risk windows
+to the cohort. The result is stored as an Andromeda table inside `pnuData`.
+
+```{r study-pop}
+spArgs <- createStudyPopulationArgs(
+  outcomeId           = 1L,
+  riskWindowStart     = 0L,
+  riskWindowEnd       = 365L,
+  endAnchor           = "cohort start",
+  requireTimeAtRisk   = FALSE
+)
+
+pnuData <- createStudyPopulation(pnuData, spArgs)
+
+# Collect the study population into memory
+pop <- dplyr::collect(pnuData$studyPopulation)
+nrow(pop)
+```
+
+## Step 3 — Fit the time-conditional propensity score
+
+`fitTcps()` estimates the TCPS by conditional logistic regression (via Cyclops),
+stratified by exposure set. It returns the study population data frame with a
+`propensityScore` column added.
+
+```{r tcps}
+tcpsArgs <- createTcpsArgs(maxIterations = 2500L)
+pop <- fitTcps(pop, pnuData, tcpsArgs)
+
+summary(pop$propensityScore)
+```
+
+## Step 4 — Match on TCPS
+
+`matchOnTcps()` performs nearest-neighbour matching within each exposure set.
+
+```{r match}
+matchArgs <- createMatchingArgs(
+  maxRatio = 4L,
+  caliper  = 0.2
+)
+
+matchedPop <- matchOnTcps(pop, matchArgs)
+
+cat(sprintf(
+  "Matched population: %d switchers, %d comparators\n",
+  sum(matchedPop$treatment == 1L),
+  sum(matchedPop$treatment == 0L)
+))
+```
+
+## Step 5 — Covariate balance
+
+`computeCovariateBalance()` computes standardised mean differences (SMD) before
+and after matching. SMDs below 0.1 indicate adequate balance.
+
+```{r balance}
+balArgs <- createCovariateBalanceArgs()
+balance <- computeCovariateBalance(matchedPop, pnuData, balArgs)
+
+# Show the five covariates with the largest absolute post-matching SMD
+balance |>
+  dplyr::arrange(dplyr::desc(abs(afterMatchingSmd))) |>
+  dplyr::select(covariate_name, beforeMatchingSmd, afterMatchingSmd) |>
+  head(5)
+```
+
+## Step 6 — Fit outcome model
+
+`fitOutcomeModel()` fits a stratified Cox proportional-hazards model
+(via Cyclops) with the matched sets as strata.
+
+```{r outcome}
+omArgs  <- createOutcomeModelArgs()
+result  <- fitOutcomeModel(matchedPop, pnuData, omArgs)
+
+cat(sprintf(
+  "HR = %.3f  (95%% CI %.3f-%.3f)\n",
+  exp(result$logRr),
+  result$ci95Lb,
+  result$ci95Ub
+))
+```
+
+## Step 7 — Bootstrap confidence interval (optional)
+
+`bootstrapCi()` replaces the Wald CI with a stratum-resampling bootstrap.
+Use this when the normal approximation is suspect (small matched sets, rare
+outcomes).
+
+```{r bootstrap}
+bsArgs   <- createBootstrapArgs(nReps = 500L, seed = 1L)
+bsResult <- bootstrapCi(matchedPop, pnuData, omArgs, bsArgs)
+
+cat(sprintf(
+  "Bootstrap CI: %.3f-%.3f\n",
+  bsResult$ci95Lb,
+  bsResult$ci95Ub
+))
+```
+
+## Using the top-level orchestrator
+
+For a full study with multiple analysis variants, `runPnuAnalyses()` handles
+iteration, error recovery, and file output:
+
+```{r run-analyses}
+analyses <- list(
+  createPnuAnalysisArgs(
+    analysisId          = 1L,
+    description         = "primary (caliper 0.2)",
+    studyPopulationArgs = spArgs,
+    tcpsArgs            = tcpsArgs,
+    matchingArgs        = matchArgs,
+    outcomeModelArgs    = omArgs
+  ),
+  createPnuAnalysisArgs(
+    analysisId          = 2L,
+    description         = "sensitivity (no caliper)",
+    studyPopulationArgs = spArgs,
+    tcpsArgs            = tcpsArgs,
+    matchingArgs        = createMatchingArgs(caliper = 0L, maxRatio = 4L),
+    outcomeModelArgs    = omArgs
+  )
+)
+
+outputFolder <- file.path(tempdir(), "pnu_demo")
+
+summary <- runPnuAnalyses(
+  pnuAnalysisList = analyses,
+  outputFolder    = outputFolder,
+  pnuDataList     = list(pnuData)   # pre-loaded data; omit for DB workflow
+)
+
+summary[, c("analysis_id", "description", "log_rr", "status")]
+```
+
+## Exporting results
+
+`exportToCsv()` writes flat CSV files ready for Strategus aggregation or a
+Shiny results viewer.
+
+```{r export}
+exportFolder <- file.path(tempdir(), "pnu_export")
+
+exportToCsv(
+  outputFolder = outputFolder,
+  exportFolder = exportFolder,
+  databaseId   = "Synpuf_5pct"
+)
+
+list.files(exportFolder)
+```
+
+## Empirical calibration (optional)
+
+When negative control outcomes are available, use `calibrateEstimates()` to
+correct for residual systematic error before exporting.
+
+```{r calibrate}
+# negativeControls must be a data frame with logRr and seLogRr columns
+calibrated <- calibrateEstimates(
+  estimates               = summary,
+  negativeControlOutcomes = negativeControls
+)
+
+# Write the calibrated summary back and re-export
+utils::write.csv(calibrated, file.path(outputFolder, "summary.csv"),
+                 row.names = FALSE)
+exportToCsv(outputFolder, exportFolder, databaseId = "Synpuf_5pct")
+```
+
+## Database workflow
+
+To run against a real CDM database, replace the simulation with
+`getDbPnuData()`. Everything from Step 2 onwards is identical.
+
+```{r database-workflow}
+connectionDetails <- DatabaseConnector::createConnectionDetails(
+  dbms     = "postgresql",
+  server   = "myserver/mydb",
+  user     = Sys.getenv("DB_USER"),
+  password = Sys.getenv("DB_PASSWORD")
+)
+
+pnuCohortArgs <- createPnuCohortArgs(
+  targetCohortId     = 1L,   # reference treatment A
+  comparatorCohortId = 2L,   # new treatment B / switcher cohort
+  outcomeCohortId    = 3L
+)
+
+covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
+
+pnuData <- getDbPnuData(
+  connectionDetails    = connectionDetails,
+  cdmDatabaseSchema    = "cdm",
+  cohortDatabaseSchema = "results",
+  cohortTable          = "cohort",
+  pnuCohortArgs        = pnuCohortArgs,
+  covariateSettings    = covariateSettings
+)
+
+# Then proceed with Steps 2-7 or runPnuAnalyses() above
+```
+
+## Storing results in a database
+
+For multi-database studies, upload results to a shared results schema using
+the results data model functions.
+
+```{r results-db}
+resultsConnectionDetails <- DatabaseConnector::createConnectionDetails(
+  dbms   = "sqlite",
+  server = "results.sqlite"
+)
+
+createResultsDataModel(resultsConnectionDetails, databaseSchema = "main")
+uploadResults(resultsConnectionDetails, databaseSchema = "main",
+              resultsFolder = outputFolder)
+```
+
+## Session info
+
+```{r session-info, eval=TRUE}
+sessionInfo()
+```

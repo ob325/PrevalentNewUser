@@ -1,0 +1,82 @@
+url: https://ohdsi.github.io/PrevalentNewUser
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+home:
+  title: "PrevalentNewUser"
+  description: >
+    Implements the prevalent new-user (PNU) cohort design for OMOP CDM data.
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+  components:
+    intro:
+      text: "Get started"
+      href: articles/SingleStudy.html
+
+reference:
+  - title: "Settings objects"
+    desc: >
+      Every settings object has a `create*Args()` factory function.
+      Pass the object to the corresponding `run*()` or `fit*()` function.
+    contents:
+      - createPnuCohortArgs
+      - createSimulationArgs
+      - createStudyPopulationArgs
+      - createTcpsArgs
+      - createMatchingArgs
+      - createCovariateBalanceArgs
+      - createOutcomeModelArgs
+      - createBootstrapArgs
+      - createPnuAnalysisArgs
+
+  - title: "Data access"
+    contents:
+      - getDbPnuData
+      - savePnuData
+      - loadPnuData
+
+  - title: "Simulation"
+    contents:
+      - simulatePnuData
+
+  - title: "Analysis pipeline"
+    contents:
+      - createStudyPopulation
+      - fitTcps
+      - matchOnTcps
+      - computeCovariateBalance
+      - fitOutcomeModel
+      - bootstrapCi
+
+  - title: "Orchestration"
+    contents:
+      - runPnuAnalyses
+
+  - title: "Calibration"
+    contents:
+      - calibrateEstimates
+
+  - title: "Results"
+    contents:
+      - createResultsDataModel
+      - uploadResults
+      - exportToCsv
+
+  - title: "Data class"
+    contents:
+      - PnuData-class
+
+articles:
+  - title: "Vignettes"
+    navbar: ~
+    contents:
+      - SingleStudy
+
+news:
+  releases:
+    - text: "Version 0.0.1"
+      href: news/index.html

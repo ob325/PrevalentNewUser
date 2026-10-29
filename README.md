@@ -108,28 +108,25 @@ pnuData <- getDbPnuData(
   covariateSettings    = covariateSettings
 )
 
-# 4. Build the study population
-studyPop <- createStudyPopulation(
-  pnuData              = pnuData,
-  studyPopulationArgs  = createStudyPopulationArgs(
-    outcomeId        = 3,
-    riskWindowStart  = 0,
-    riskWindowEnd    = 365,
-    endAnchor        = "cohort start"
-  )
+# 4. Build the study population (modifies pnuData in place)
+spArgs  <- createStudyPopulationArgs(
+  outcomeId       = 3,
+  riskWindowStart = 0,
+  riskWindowEnd   = 365,
+  endAnchor       = "cohort start"
 )
+pnuData <- createStudyPopulation(pnuData, spArgs)
+pop     <- dplyr::collect(pnuData$studyPopulation)
 
 # 5. Fit TCPS, match, and estimate
-tcpsFit <- fitTcps(studyPop, pnuData, createTcpsArgs())
-matched  <- matchOnTcps(tcpsFit, createMatchingArgs(maxRatio = 4))
-result   <- fitOutcomeModel(matched, pnuData, createOutcomeModelArgs())
+pop     <- fitTcps(pop, pnuData, createTcpsArgs())
+matched <- matchOnTcps(pop, createMatchingArgs(maxRatio = 4))
+result  <- fitOutcomeModel(matched, pnuData, createOutcomeModelArgs())
 
-result$logRr
+exp(result$logRr)   # hazard ratio
 result$ci95Lb
 result$ci95Ub
 ```
-
-> **Note:** The functions used after `createPnuCohortArgs()` are implemented in later development phases. See `extras/ImplementationPlan.md` for current status.
 
 ---
 

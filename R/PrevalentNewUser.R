@@ -27,6 +27,7 @@
 #' @importFrom utils read.csv write.csv head tail
 #' @importFrom jsonlite toJSON fromJSON
 #' @importFrom withr with_seed
+#' @importFrom EmpiricalCalibration fitNull convertNullToErrorModel calibrateConfidenceInterval calibrateP
 #' @importFrom cli cat_line
 #' @importFrom pillar style_subtle
 NULL
