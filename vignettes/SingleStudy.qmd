@@ -254,11 +254,15 @@ exportToCsv(outputFolder, exportFolder, databaseId = "Synpuf_5pct")
 
 ## Database workflow
 
-To run against a real CDM database, replace the simulation with
-`getDbPnuData()`. Everything from Step 2 onwards is identical.
+Running a PNU analysis against a real CDM database requires three steps
+before `getDbPnuData()`: define the cohorts with `Capr`, generate them
+with `CohortGenerator`, and then connect and load. Everything from Step 2
+onwards is identical to the simulated-data workflow above.
+
+### Connecting to the database
 
 ```{r}
-#| label: database-workflow
+#| label: db-connect
 #| eval: false
 connectionDetails <- DatabaseConnector::createConnectionDetails(
   dbms     = "postgresql",
@@ -267,19 +271,136 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(
   password = Sys.getenv("DB_PASSWORD")
 )
 
-pnuCohortArgs <- createPnuCohortArgs(
-  targetCohortId     = 1L,   # reference treatment A
-  comparatorCohortId = 2L,   # new treatment B / switcher cohort
-  outcomeCohortId    = 3L
+cdmDatabaseSchema    <- "cdm"
+cohortDatabaseSchema <- "results"
+cohortTable          <- "pnu_cohorts"
+```
+
+### Defining cohorts with Capr
+
+This example implements a PNU study comparing GLP-1 receptor agonists
+(tirzepatide or semaglutide — treatment A, the reference) against bariatric
+surgery (treatment B, the switcher event).
+Patients must be 18 or older at cohort entry.
+
+The **GLP-1 RA cohort** combines tirzepatide (concept 779705) and semaglutide
+(concept 793143) into a single concept set, so a patient enters the cohort at
+their first dispensing of either agent and exits when a 45-day gap in supply
+occurs.
+The 45-day persistence window accommodates monthly injectable formulations.
+
+The **bariatric surgery cohort** is defined by a single procedure concept
+(4326683) and exits at the end of the patient's observation period, since
+the index date is a one-time operative event.
+
+```{r}
+#| label: capr-cohorts
+#| eval: false
+library(Capr)
+
+# --- Treatment A: GLP-1 receptor agonists (composite) -----------------------
+
+glp1ra <- cs(
+  descendants(779705L),   # tirzepatide
+  descendants(793143L),   # semaglutide
+  name = "GLP-1 receptor agonists"
 )
 
-covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
+glp1raCohort <- cohort(
+  entry = entry(
+    drugExposure(glp1ra, age(gte(18L))),
+    primaryCriteriaLimit = "First"
+  ),
+  exit = exit(
+    endStrategy = drugExit(glp1ra,
+                           persistenceWindow  = 45L,
+                           surveillanceWindow = 0L)
+  )
+)
+
+# --- Treatment B: bariatric operative procedure -----------------------------
+
+bariatricCs <- cs(
+  descendants(4326683L),
+  name = "Bariatric operative procedure"
+)
+
+bariatricCohort <- cohort(
+  entry = entry(
+    procedure(bariatricCs, age(gte(18L))),
+    primaryCriteriaLimit = "First"
+  ),
+  exit = exit(
+    endStrategy = observationExit()
+  )
+)
+
+# Cohort IDs are assigned in order: 1 = GLP-1 RA, 2 = bariatric surgery
+exposureCohorts <- makeCohortSet(glp1raCohort, bariatricCohort)
+```
+
+### Generating cohorts with CohortGenerator
+
+```{r}
+#| label: cohort-generator
+#| eval: false
+library(CohortGenerator)
+
+cohortTableNames <- getCohortTableNames(cohortTable = cohortTable)
+
+createCohortTables(
+  connectionDetails    = connectionDetails,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTableNames     = cohortTableNames
+)
+
+generateCohortSet(
+  connectionDetails    = connectionDetails,
+  cdmDatabaseSchema    = cdmDatabaseSchema,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTableNames     = cohortTableNames,
+  cohortDefinitionSet  = exposureCohorts
+)
+
+# Verify cohort counts
+sql <- "SELECT cohort_definition_id, COUNT(*) AS n
+        FROM @cohortDatabaseSchema.@cohortTable
+        GROUP BY cohort_definition_id"
+DatabaseConnector::renderTranslateQuerySql(
+  connection           = DatabaseConnector::connect(connectionDetails),
+  sql                  = sql,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTable          = cohortTable
+)
+```
+
+### Loading PNU data
+
+The GLP-1 RA cohort is the reference treatment A (`targetCohortId = 1`),
+and the bariatric surgery cohort marks the switcher index dates
+(`comparatorCohortId = 2`).
+Exclude the GLP-1 RA concept IDs and their descendants from the covariates
+so the propensity model does not condition on the exposure itself.
+
+```{r}
+#| label: database-workflow
+#| eval: false
+covariateSettings <- FeatureExtraction::createDefaultCovariateSettings(
+  excludedCovariateConceptIds   = c(779705L, 793143L),
+  addDescendantsToExclude       = TRUE
+)
+
+pnuCohortArgs <- createPnuCohortArgs(
+  targetCohortId     = 1L,   # GLP-1 RA (reference treatment A)
+  comparatorCohortId = 2L,   # bariatric surgery (switcher / treatment B)
+  outcomeCohortId    = 3L    # define and generate separately
+)
 
 pnuData <- getDbPnuData(
   connectionDetails    = connectionDetails,
-  cdmDatabaseSchema    = "cdm",
-  cohortDatabaseSchema = "results",
-  cohortTable          = "cohort",
+  cdmDatabaseSchema    = cdmDatabaseSchema,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortTable          = cohortTable,
   pnuCohortArgs        = pnuCohortArgs,
   covariateSettings    = covariateSettings
 )
