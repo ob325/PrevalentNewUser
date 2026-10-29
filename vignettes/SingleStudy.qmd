@@ -167,7 +167,7 @@ outcomes).
 
 ```{r}
 #| label: bootstrap
-bsArgs   <- createBootstrapArgs(nReps = 500L, seed = 1L)
+bsArgs   <- createBootstrapArgs(numberOfReplications = 500L, seed = 1L)
 bsResult <- bootstrapCi(matchedPop, pnuData, omArgs, bsArgs)
 
 cat(sprintf(
