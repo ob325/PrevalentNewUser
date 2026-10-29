@@ -97,7 +97,7 @@ stratified by exposure set. It returns the study population data frame with a
 `propensityScore` column added.
 
 ```{r tcps}
-tcpsArgs <- createTcpsArgs(maxIterations = 2500L)
+tcpsArgs <- createTcpsArgs()
 pop <- fitTcps(pop, pnuData, tcpsArgs)
 
 summary(pop$propensityScore)
