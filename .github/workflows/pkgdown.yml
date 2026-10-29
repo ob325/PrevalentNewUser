@@ -36,4 +36,4 @@ jobs:
           git config --local user.name "GitHub Actions"
 
       - name: Build and deploy pkgdown site
-        run: Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE)'
+        run: Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE, quiet = FALSE)'

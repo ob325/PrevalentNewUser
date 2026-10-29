@@ -8,7 +8,7 @@ format:
     toc-depth: 3
     number-sections: false
 execute:
-  eval: true 
+  eval: false
   echo: true
 vignette: >
   %\VignetteIndexEntry{Running a Single PNU Analysis}
@@ -19,7 +19,7 @@ vignette: >
 ```{r}
 #| label: setup
 #| include: false
-devtools::load_all()
+library(PrevalentNewUser)
 ```
 
 ## Overview
@@ -430,6 +430,5 @@ uploadResults(resultsConnectionDetails, databaseSchema = "main",
 
 ```{r}
 #| label: session-info
-#| eval: true
 sessionInfo()
 ```
