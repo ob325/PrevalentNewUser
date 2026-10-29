@@ -110,12 +110,12 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 
 ---
 
-### Step 2.3 — Set 0 equivalence test [x]
+### Step 2.3 — Set-0 boundary tests [x]
 
-**Goal:** Confirm that restricting to exposure set 0 produces the same target/comparator pairs as a hypothetical ACNU analysis.
+**Goal:** Confirm that B-starters with no prior A receive `exposure_set = 0`, are marked `is_switcher = TRUE`, and produce no comparator rows. Set 0 is structurally empty on the comparator side: comparator index dates are derived from a person's A treatment history (the date they reached E days/fills on A), and for E = 0 there is no such history to index on.
 
 **Files**
-- `tests/testthat/test-ExposureSets.R` — additional test on the six-patient fixture: when all switchers are set-0, the `is_switcher` column matches a manually labelled ACNU pairing
+- `tests/testthat/test-ExposureSets.R` — tests for both time and fills definitions on a fixture where all B-starters have zero prior A
 
 **Tests:** as above.
 
@@ -395,11 +395,11 @@ Each step is one session turn. Tick the checkbox and add a Decisions log entry w
 | 1.1 | EmpiricalCalibration stays in Suggests | No change yet | Still not installed; jsonlite added to Imports instead |
 | 1.2 | "slots" in plan means Andromeda tables | cohorts/outcomes/exposureSets are DuckDB tables, not S4 slots | CovariateData has no extra S4 slots; all data is stored in the DuckDB database via Andromeda |
 | 1.2 | class() assignment must be single string | class(x) <- "PnuData" not c("PnuData","CovariateData") | Setting multiple class strings strips S4 semantics; the hierarchy is already encoded in setClass(contains=) |
-| 2.1 | Set 0 comparators not implemented | Deferred to StudyPopulation step (5.1) | Finding set-0 comparator index dates requires calendar-date matching, not era-history lookup; out of scope for the reference implementation |
+| 2.1 | Set 0 comparators do not exist | Set 0 is structurally empty on the comparator side | Comparator index dates are derived from A-treatment history (date at E days/fills); for E=0 there is no A history to index on; no deferred implementation needed |
 | 2.1 | do.call(rbind, c(rows, list(make.row.names=FALSE))) broken | Replaced with explicit empty-list guards + rownames(d)<-NULL | The make.row.names trick misbehaves when rows is empty or length-1 |
 | 2.2 | querySql returns upper-case column names | snakeCaseToCamelCase = FALSE + manual rename in the returned tibble | snakeCaseToCamelCase=TRUE would produce camelCase, requiring column name changes throughout |
 | 2.2 | expect_no_error() does not accept info argument | Replaced with try() + expect_false(inherits(..., "try-error")) | This version of testthat disallows extra ... in expect_no_error |
-| 2.3 | "ACNU pairing" scope | Only the switcher/target identity is tested here; full pipeline equivalence (matched comparators, outcome model) deferred to Phase 5+ | set-0 comparator index dates require calendar matching not yet implemented |
+| 2.3 | Set-0 comparator pool is empty | Tests confirm switchers get exposure_set=0 and no comparator rows are emitted | Set 0 is not an ACNU-equivalent sub-analysis; it is a degenerate case with no matchable comparators |
 | 3.1 | exposureSetDefinition not in PnuCohortArgs | Added as direct arg to getDbPnuData() (default "time") | Plan's Step 1.1 arg list for PnuCohortArgs has no such field; adding it there would change a ticked step |
 | 3.1 | Cyclops / ResultModelManager moved to Suggests | Not used until Phase 6+/10+; R CMD check warned about unused Imports | cli and pillar added to Imports (used in PnuData::show via ::) |
 | 4.1 | outcomeBaseRate and followUpDays added to plan args | Both needed for the exponential survival model; plan listed only logRr without specifying the rate scale | outcomeBaseRate = P(event | comparator, followUpDays) is the most interpretable parameterisation |

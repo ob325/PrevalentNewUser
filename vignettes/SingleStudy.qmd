@@ -58,7 +58,7 @@ simArgs <- createSimulationArgs(
   nSwitchers         = 500L,
   nComparatorsPerSet = 500L,
   nExposureSets      = 3L,
-  nCovariates        = 10L,
+  nCovariates        = 100L,
   outcomeBaseRate    = 0.15,
   logRr              = log(1.5),   # true HR = 1.5
   seed               = 42L
@@ -239,6 +239,7 @@ correct for residual systematic error before exporting.
 
 ```{r}
 #| label: calibrate
+#| eval: false
 # negativeControls must be a data frame with logRr and seLogRr columns
 calibrated <- calibrateEstimates(
   estimates               = summary,
@@ -258,6 +259,7 @@ To run against a real CDM database, replace the simulation with
 
 ```{r}
 #| label: database-workflow
+#| eval: false
 connectionDetails <- DatabaseConnector::createConnectionDetails(
   dbms     = "postgresql",
   server   = "myserver/mydb",
@@ -292,6 +294,7 @@ the results data model functions.
 
 ```{r}
 #| label: results-db
+#| eval: false
 resultsConnectionDetails <- DatabaseConnector::createConnectionDetails(
   dbms   = "sqlite",
   server = "results.sqlite"

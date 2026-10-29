@@ -167,7 +167,10 @@ computeExposureSetsInR <- function(treatmentA,
   rownames(switcherData) <- NULL
 
   # ---- Comparator rows -----------------------------------------------------
-  # Only sets > 0 are handled here; set 0 comparators require calendar matching.
+  # Set 0 has no comparators. Comparator index dates are derived from a
+  # person's A treatment history (the date when they reached E days/fills on A).
+  # For E = 0 there is no A history to index on, so the comparator pool for
+  # set 0 is structurally empty. Only sets > 0 are processed here.
   uniqueSets <- sort(unique(switcherData$exposure_set[switcherData$exposure_set > 0L]))
   comparatorIds <- setdiff(treatmentA$subject_id, switcherIds)
 

@@ -6,7 +6,7 @@ Guidance for Claude Code when working in this repository.
 
 **PrevalentNewUser** is an OHDSI HADES R package that implements the prevalent new-user (PNU) cohort design (Suissa, Moodie & Dell'Aniello, *Pharmacoepidemiol Drug Saf* 2017;26(4):459–468) for data in the OMOP Common Data Model.
 
-It sits alongside **CohortMethod**, which remains the package for active-comparator new-user (ACNU) designs. PrevalentNewUser does **not** depend on CohortMethod at runtime. CohortMethod is used only in tests, as a reference implementation (see "Set 0 equivalence" below).
+It sits alongside **CohortMethod**, which remains the package for active-comparator new-user (ACNU) designs. PrevalentNewUser does **not** depend on CohortMethod at runtime.
 
 The package reuses lower-level HADES libraries: DatabaseConnector, SqlRender, FeatureExtraction, Andromeda, Cyclops, EmpiricalCalibration, ParallelLogger and ResultModelManager.
 
@@ -17,11 +17,10 @@ The package reuses lower-level HADES libraries: DatabaseConnector, SqlRender, Fe
 | Reference treatment (A) | The treatment patients start on, given as a cohort (e.g. GLP-1 RA exposure eras). |
 | New treatment (B) | The treatment some patients switch to or add, given as a cohort of start dates (e.g. first bariatric procedure). |
 | Switcher (target) | A person who starts B. Their B start date is their index date. |
-| Exposure set | A group of switchers who had the same history of A when they started B (same time on A, or same number of A fills). Set 0 = no prior A. |
-| Comparator | A person still on A, who has not started B, at the same point in A therapy as a switcher. Indexed on that day. A person can be a comparator in several sets. |
+| Exposure set | A group of switchers who had the same history of A when they started B (same time on A, or same number of A fills). Set 0 = no prior A; set-0 patients produce no comparators (see ExposureSets.R). |
+| Comparator | A person still on A, who has not started B, at the same point in A therapy as a switcher. Indexed on that day. A person can be a comparator in several sets. Set 0 is structurally empty: there is no A history to index on. |
 | Time-conditional propensity score (TCPS) | P(switch to B) given covariates, fitted by conditional logistic regression stratified by exposure set. |
 | Matched set | One switcher plus its matched comparators, within one exposure set. The stratum for the outcome model. |
-| Set 0 equivalence | A run restricted to exposure set 0 is an ACNU analysis and should reproduce CohortMethod with equivalent settings. |
 
 ## How we work: one step at a time
 

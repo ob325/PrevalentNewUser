@@ -228,18 +228,18 @@ test_that("computeExposureSetsInR errors on wrong exposureSetDefinition", {
   )
 })
 
-# ---- Set-0 equivalence: all switchers have no prior A ----------------------
+# ---- Set 0: B-starters with no prior A -------------------------------------
 #
-# When every B-starter has zero prior A their exposure_set is 0, and
-# computeExposureSetsInR() returns ONLY switcher rows (set-0 comparators
-# require calendar-date matching deferred to createStudyPopulation()).
-# This means the returned person_id + is_switcher column exactly reproduces
-# the ACNU "target" set — the same persons CohortMethod would label as targets.
+# When a B-starter has zero prior A their exposure_set is 0. Set 0 has no
+# comparators: comparator index dates are derived from a person's A treatment
+# history (the date they reached E days/fills on A), and for E = 0 there is
+# no A history to index on. The set-0 comparator pool is structurally empty.
+# Only switcher rows are returned for set-0 patients.
 
 test_that("set-0: all switchers labelled is_switcher=TRUE with exposure_set=0", {
   b_starts <- as.Date(c("2020-03-01", "2020-07-01", "2020-11-01"))
 
-  # Persons 1-3 start B with zero prior A (pure new users of B).
+  # Persons 1-3 start B with zero prior A.
   treatmentA <- data.frame(
     cohort_definition_id = 1L,
     subject_id           = c(4L, 5L),
@@ -263,18 +263,17 @@ test_that("set-0: all switchers labelled is_switcher=TRUE with exposure_set=0", 
 
   result <- computeExposureSetsInR(treatmentA, treatmentB, observationPeriod)
 
-  # Exactly the three B-starters, all in set 0, all marked as switchers.
-  # This is the ACNU target set.
+  # Only the three B-starters appear; all in set 0, all marked as switchers.
   expect_equal(nrow(result), 3L)
   expect_setequal(result$person_id, c("1", "2", "3"))
   expect_true(all(result$exposure_set == 0L))
   expect_true(all(result$is_switcher))
 
-  # Index dates are the B start dates (same as ACNU index dates)
+  # Index dates are the B start dates.
   result_sorted <- result[order(result$person_id), ]
   expect_equal(result_sorted$index_date, sort(b_starts))
 
-  # A-only persons 4 and 5 do not appear (set-0 comparators are deferred)
+  # A-only persons 4 and 5 produce no rows: set-0 comparator pool is empty.
   expect_false(any(result$person_id %in% c("4", "5")))
 })
 
