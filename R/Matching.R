@@ -52,6 +52,7 @@ MatchingArgs <- R6::R6Class(
       self$maxRatio <- as.integer(maxRatio)
       self$allowReverseMatch <- allowReverseMatch
       if (!is.null(json)) super$initialize(json = json)
+      self$validate()
     },
 
     #' @description Validate all fields using checkmate.
@@ -115,13 +116,6 @@ createMatchingArgs <- function(caliper = 0.2,
                                caliperScale = "standardized logit",
                                maxRatio = 1L,
                                allowReverseMatch = FALSE) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertNumber(caliper, lower = 0, add = errorMessages)
-  checkmate::assertChoice(caliperScale, c("standardized logit", "logit"), add = errorMessages)
-  checkmate::assertInt(maxRatio, lower = 0L, add = errorMessages)
-  checkmate::assertLogical(allowReverseMatch, len = 1L, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   MatchingArgs$new(
     caliper = caliper,
     caliperScale = caliperScale,

@@ -161,27 +161,7 @@ createPnuAnalysisArgs <- function(analysisId = 1L,
                                   outcomeModelArgs,
                                   bootstrapArgs = NULL,
                                   balanceArgs = NULL) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertInt(analysisId, lower = 1L, add = errorMessages)
-  checkmate::assertString(description, add = errorMessages)
-  if (!is.null(pnuCohortArgs)) {
-    checkmate::assertClass(pnuCohortArgs, "PnuCohortArgs", add = errorMessages)
-  }
-  checkmate::assertClass(studyPopulationArgs, "StudyPopulationArgs", add = errorMessages)
-  if (!is.null(tcpsArgs)) {
-    checkmate::assertClass(tcpsArgs, "TcpsArgs", add = errorMessages)
-  }
-  checkmate::assertClass(matchingArgs, "MatchingArgs", add = errorMessages)
-  checkmate::assertClass(outcomeModelArgs, "OutcomeModelArgs", add = errorMessages)
-  if (!is.null(bootstrapArgs)) {
-    checkmate::assertClass(bootstrapArgs, "BootstrapArgs", add = errorMessages)
-  }
-  if (!is.null(balanceArgs)) {
-    checkmate::assertClass(balanceArgs, "BalanceArgs", add = errorMessages)
-  }
-  checkmate::reportAssertions(collection = errorMessages)
-
-  PnuAnalysis$new(
+  obj <- PnuAnalysis$new(
     analysisId          = as.integer(analysisId),
     description         = description,
     pnuCohortArgs       = pnuCohortArgs,
@@ -192,6 +172,8 @@ createPnuAnalysisArgs <- function(analysisId = 1L,
     bootstrapArgs       = bootstrapArgs,
     balanceArgs         = balanceArgs
   )
+  obj$validate()
+  obj
 }
 
 # ---- Internal: run one analysis ---------------------------------------------

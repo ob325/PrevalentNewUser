@@ -86,7 +86,6 @@ test_that("PnuCohortArgs$validate() passes on a valid object", {
   expect_silent(args$validate())
 })
 
-test_that("PnuCohortArgs$validate() errors when required fields are NULL", {
-  args <- PnuCohortArgs$new()
-  expect_error(args$validate())
+test_that("PnuCohortArgs$new() errors when required fields are NULL", {
+  expect_error(PnuCohortArgs$new())
 })

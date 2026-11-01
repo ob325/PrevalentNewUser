@@ -64,7 +64,10 @@ TcpsArgs <- R6::R6Class(
       self$seed <- as.integer(seed)
       if (!is.null(json)) {
         super$initialize(json = json)
+        self$excludedCovariateConceptIds <- as.integer(unlist(self$excludedCovariateConceptIds))
+        self$includedCovariateConceptIds <- as.integer(unlist(self$includedCovariateConceptIds))
       }
+      self$validate()
     },
 
     #' @description Serialise to JSON (prior and control fields are omitted).
@@ -150,19 +153,6 @@ createTcpsArgs <- function(prior = NULL,
                            includedCovariateConceptIds = integer(0),
                            maxCohortSizeForFitting = 250000L,
                            seed = 1L) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertIntegerish(
-    excludedCovariateConceptIds,
-    lower = 0L, null.ok = FALSE, add = errorMessages
-  )
-  checkmate::assertIntegerish(
-    includedCovariateConceptIds,
-    lower = 0L, null.ok = FALSE, add = errorMessages
-  )
-  checkmate::assertInt(maxCohortSizeForFitting, lower = 0L, add = errorMessages)
-  checkmate::assertInt(seed, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   TcpsArgs$new(
     prior = prior,
     control = control,

@@ -46,6 +46,7 @@ BootstrapArgs <- R6::R6Class(
       self$seed <- as.integer(seed)
       self$cores <- as.integer(cores)
       if (!is.null(json)) super$initialize(json = json)
+      self$validate()
     },
 
     #' @description Validate all fields using checkmate.
@@ -86,12 +87,6 @@ BootstrapArgs <- R6::R6Class(
 createBootstrapArgs <- function(numberOfReplications = 1000L,
                                 seed = 1L,
                                 cores = 1L) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertInt(numberOfReplications, lower = 1L, add = errorMessages)
-  checkmate::assertInt(seed, add = errorMessages)
-  checkmate::assertInt(cores, lower = 1L, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   BootstrapArgs$new(
     numberOfReplications = as.integer(numberOfReplications),
     seed = as.integer(seed),

@@ -58,6 +58,7 @@ OutcomeModelArgs <- R6::R6Class(
       self$prior <- prior
       self$control <- control
       if (!is.null(json)) super$initialize(json = json)
+      self$validate()
     },
 
     #' @description Serialise to JSON (prior and control fields are omitted).
@@ -130,12 +131,6 @@ createOutcomeModelArgs <- function(modelType = "cox",
                                    useCovariates = FALSE,
                                    prior = NULL,
                                    control = NULL) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertChoice(modelType, c("cox", "logistic", "poisson"), add = errorMessages)
-  checkmate::assertLogical(stratified, len = 1L, add = errorMessages)
-  checkmate::assertLogical(useCovariates, len = 1L, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   OutcomeModelArgs$new(
     modelType = modelType,
     stratified = stratified,

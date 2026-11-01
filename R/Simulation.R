@@ -79,6 +79,7 @@ SimulationArgs <- R6::R6Class(
       if (!is.null(json)) {
         super$initialize(json = json)
       }
+      self$validate()
     },
 
     #' @description Validate all fields using checkmate.
@@ -172,22 +173,6 @@ createSimulationArgs <- function(nSwitchers = 200L,
                                  logRr = 0.0,
                                  seed = 1L,
                                  json = NULL) {
-  if (!is.null(json)) {
-    return(SimulationArgs$new(json = json))
-  }
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertInt(nSwitchers, lower = 1L, add = errorMessages)
-  checkmate::assertInt(nComparatorsPerSet, lower = 1L, add = errorMessages)
-  checkmate::assertInt(nExposureSets, lower = 1L, add = errorMessages)
-  checkmate::assertInt(nCovariates, lower = 0L, add = errorMessages)
-  checkmate::assertNumber(prevalenceBase, lower = 0.0, upper = 1.0, add = errorMessages)
-  checkmate::assertNumber(prevalenceDiff, lower = 0.0, upper = 1.0, add = errorMessages)
-  checkmate::assertNumber(outcomeBaseRate, lower = 1e-6, upper = 1 - 1e-6, add = errorMessages)
-  checkmate::assertInt(followUpDays, lower = 1L, add = errorMessages)
-  checkmate::assertNumber(logRr, add = errorMessages)
-  checkmate::assertInt(seed, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   SimulationArgs$new(
     nSwitchers = as.integer(nSwitchers),
     nComparatorsPerSet = as.integer(nComparatorsPerSet),
@@ -198,7 +183,8 @@ createSimulationArgs <- function(nSwitchers = 200L,
     outcomeBaseRate = outcomeBaseRate,
     followUpDays = as.integer(followUpDays),
     logRr = logRr,
-    seed = as.integer(seed)
+    seed = as.integer(seed),
+    json = json
   )
 }
 

@@ -40,6 +40,7 @@ BalanceArgs <- R6::R6Class(
                           json = NULL) {
       self$maxCohortSizeForBalance <- as.integer(maxCohortSizeForBalance)
       if (!is.null(json)) super$initialize(json = json)
+      self$validate()
     },
 
     #' @description Validate all fields using checkmate.
@@ -74,10 +75,6 @@ BalanceArgs <- R6::R6Class(
 #'
 #' @export
 createBalanceArgs <- function(maxCohortSizeForBalance = 250000L) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertInt(maxCohortSizeForBalance, lower = 0L, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   BalanceArgs$new(maxCohortSizeForBalance = as.integer(maxCohortSizeForBalance))
 }
 

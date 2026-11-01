@@ -107,7 +107,10 @@ PnuCohortArgs <- R6::R6Class(
       self$maxCohortSize <- maxCohortSize
       if (!is.null(json)) {
         super$initialize(json = json)
+        self$excludedCovariateConceptIds <- as.integer(unlist(self$excludedCovariateConceptIds))
+        self$includedCovariateConceptIds <- as.integer(unlist(self$includedCovariateConceptIds))
       }
+      self$validate()
     },
 
     #' @description Validate all fields using checkmate.
@@ -180,16 +183,6 @@ createPnuCohortArgs <- function(targetCohortId,
                                 includedCovariateConceptIds = integer(0),
                                 washoutPeriod = 365,
                                 maxCohortSize = 0) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertInt(targetCohortId, lower = 1, add = errorMessages)
-  checkmate::assertInt(comparatorCohortId, lower = 1, add = errorMessages)
-  checkmate::assertInt(outcomeCohortId, lower = 1, add = errorMessages)
-  checkmate::assertIntegerish(excludedCovariateConceptIds, lower = 0, null.ok = FALSE, add = errorMessages)
-  checkmate::assertIntegerish(includedCovariateConceptIds, lower = 0, null.ok = FALSE, add = errorMessages)
-  checkmate::assertInt(washoutPeriod, lower = 0, add = errorMessages)
-  checkmate::assertInt(maxCohortSize, lower = 0, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   PnuCohortArgs$new(
     targetCohortId = as.integer(targetCohortId),
     comparatorCohortId = as.integer(comparatorCohortId),

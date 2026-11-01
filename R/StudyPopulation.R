@@ -90,6 +90,7 @@ StudyPopulationArgs <- R6::R6Class(
       if (!is.null(json)) {
         super$initialize(json = json)
       }
+      self$validate()
     },
 
     #' @description Validate all fields using checkmate.
@@ -191,26 +192,6 @@ createStudyPopulationArgs <- function(outcomeId,
                                       startAnchor = "cohort start",
                                       endAnchor = "cohort end",
                                       censorAtNewRiskWindow = FALSE) {
-  errorMessages <- checkmate::makeAssertCollection()
-  checkmate::assertInt(outcomeId, lower = 1L, add = errorMessages)
-  checkmate::assertLogical(firstExposureOnly, len = 1L, add = errorMessages)
-  checkmate::assertInt(washoutPeriod, lower = 0L, add = errorMessages)
-  checkmate::assertChoice(
-    removeDuplicateSubjects,
-    c("keep all", "keep first", "remove all"),
-    add = errorMessages
-  )
-  checkmate::assertInt(priorOutcomeLookback, lower = 0L, add = errorMessages)
-  checkmate::assertLogical(requireTimeAtRisk, len = 1L, add = errorMessages)
-  checkmate::assertInt(minDaysAtRisk, lower = 0L, add = errorMessages)
-  checkmate::assertInt(maxDaysAtRisk, lower = 1L, add = errorMessages)
-  checkmate::assertInt(riskWindowStart, add = errorMessages)
-  checkmate::assertInt(riskWindowEnd, add = errorMessages)
-  checkmate::assertChoice(startAnchor, c("cohort start", "cohort end"), add = errorMessages)
-  checkmate::assertChoice(endAnchor, c("cohort start", "cohort end"), add = errorMessages)
-  checkmate::assertLogical(censorAtNewRiskWindow, len = 1L, add = errorMessages)
-  checkmate::reportAssertions(collection = errorMessages)
-
   StudyPopulationArgs$new(
     outcomeId = as.integer(outcomeId),
     firstExposureOnly = firstExposureOnly,
